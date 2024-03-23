@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SupplyRequestsWebApp.Models;
+using SupplyManagement.WebApp.Models.ViewModels;
 using System.Diagnostics;
 
-namespace SupplyRequestsWebApp.Controllers
+namespace SupplyManagement.WebApp.Controllers
 {
     public class HomeController : Controller
     {
@@ -18,6 +19,7 @@ namespace SupplyRequestsWebApp.Controllers
             return View();
         }
 
+        [Authorize]
         public IActionResult Privacy()
         {
             return View();

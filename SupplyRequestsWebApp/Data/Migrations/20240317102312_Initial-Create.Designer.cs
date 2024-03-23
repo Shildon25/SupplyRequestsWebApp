@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SupplyManagement.WebApp.Data;
 
@@ -11,9 +12,11 @@ using SupplyManagement.WebApp.Data;
 namespace SupplyManagement.WebApp.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240317102312_Initial-Create")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -375,6 +378,13 @@ namespace SupplyManagement.WebApp.Data.Migrations
                     b.Property<int>("AccountStatus")
                         .HasColumnType("int");
 
+                    b.Property<string>("ApprovedByUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -384,6 +394,8 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.HasIndex("ApprovedByUserId");
 
                     b.HasDiscriminator().HasValue("User");
                 });
@@ -515,6 +527,17 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("SupplyManagement.WebApp.Models.User", b =>
+                {
+                    b.HasOne("SupplyManagement.WebApp.Models.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApprovedBy");
                 });
 
             modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>

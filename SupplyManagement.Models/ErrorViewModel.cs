@@ -1,4 +1,4 @@
-namespace SupplyRequestsWebApp.Models
+namespace SupplyManagement.Models
 {
     public class ErrorViewModel
     {
