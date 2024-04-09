@@ -1,0 +1,71 @@
+﻿@model SupplyManagement.WebApp.Models.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Details of Manager";
+}
+<br />
+<h2 class="text-info">Manager Details</h2>
+<form asp-action="Details" method="get" enctype="multipart/form-data">
+	<div class="p-4 rounded border container row">
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<div class="col-8">
+            <div class="form-group row my-3">
+                <div class="col-2">
+                    <label asp-for="Email"></label>
+                </div>
+                <div class="col-5">
+                    <input asp-for="Email" readonly="readonly" class="form-control" />
+                </div>
+            </div>
+            <div class="form-group row my-3">
+                <div class="col-2">
+                    <label asp-for="Username"></label>
+                </div>
+                <div class="col-5">
+                    <input asp-for="Username" readonly="readonly" class="form-control" />
+                </div>
+            </div>
+            <div class="form-group row my-3">
+                <div class="col-2">
+                    <label asp-for="Username"></label>
+                </div>
+                <div class="col-5">
+                    <input asp-for="Username" readonly="readonly" class="form-control" />
+                </div>
+            </div>
+            <div class="form-group row my-3">
+                <div class="col-2">
+                    <label asp-for="Name"></label>
+                </div>
+                <div class="col-5">
+                    <input asp-for="Name" readonly="readonly" class="form-control" />
+                </div>
+            </div>
+            <div class="form-group row my-3">
+                <div class="col-2">
+                    <label asp-for="Surname"></label>
+                </div>
+                <div class="col-5">
+                    <input asp-for="Surname" readonly="readonly" class="form-control" />
+                </div>
+            </div>
+            <div class="form-group row my-3">
+                <div class="col-2">
+                    <label asp-for="UserRole"></label>
+                </div>
+                <div class="col-5">
+                    <input asp-for="UserRole" readonly="readonly" class="form-control" />
+                </div>
+            </div>
+			<div class="form-group my-3">
+				<a asp-action="Index" class="btn btn-success">Back to List</a>
+			</div>
+		</div>
+	</div>
+</form>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+}

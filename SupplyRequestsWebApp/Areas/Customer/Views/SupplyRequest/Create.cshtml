@@ -1,0 +1,32 @@
+﻿@model SupplyManagement.WebApp.Models.ViewModels.SupplyRequestViewModel
+
+@{
+    ViewData["Title"] = "Create Supply Request";
+}
+<br />
+<h2 class="text-info">Create Supply Request</h2>
+<form asp-action="Create" method="post" enctype="multipart/form-data">
+    <div class="p-4 rounded border p">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-group row my-3">
+            <div class="col-2">
+                <label asp-for="ItemsIds" class="form-label">Select items:</label>
+            </div>
+            <div class="col-5">
+                <select asp-for="ItemsIds" class="form-select" asp-items="@Model.SelectedItems" />
+            </div>
+            <span asp-validation-for="ItemsIds" class="text-danger"></span>
+        </div>
+        <div class="form-group my-3">
+            <input type="submit" class="btn btn-primary" value="Create" />
+            <a asp-action="Index" class="btn btn-success">Back to List</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+

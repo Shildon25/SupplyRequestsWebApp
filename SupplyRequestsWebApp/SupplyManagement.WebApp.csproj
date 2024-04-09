@@ -21,4 +21,90 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Areas\Courier\Controllers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Areas\Admin\Views\Manager\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Customer\Views\SupplyRequest\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Login\Views\_ViewImports.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Login\Views\_ViewStart.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Login\Views\Account\Login.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Areas\Admin\Views\Manager\Create.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Admin\Views\Manager\Delete.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Admin\Views\Manager\Details.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Customer\Views\SupplyRequest\Create.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Customer\Views\SupplyRequest\Delete.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Customer\Views\SupplyRequest\Details.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Customer\Views\SupplyRequest\Edit.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Login\Views\Account\Login.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Login\Views\Account\Register.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Login\Views\Account\SuccessfulRegistration.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Login\Views\Home\Index.cshtml" />
+    <_ContentIncludedByDefault Remove="Areas\Login\Views\Home\Privacy.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Login\Views\Account\Register.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Login\Views\Account\SuccessfulRegistration.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Login\Views\Home\Index.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Login\Views\Home\Privacy.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Admin\Views\Manager\Create.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Admin\Views\Manager\Delete.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Admin\Views\Manager\Details.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Customer\Views\SupplyRequest\Create.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Customer\Views\SupplyRequest\Delete.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Customer\Views\SupplyRequest\Details.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Areas\Customer\Views\SupplyRequest\Edit.cshtml" />
+  </ItemGroup>
+
 </Project>

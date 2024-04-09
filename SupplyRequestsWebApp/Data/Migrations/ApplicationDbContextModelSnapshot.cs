@@ -22,6 +22,21 @@ namespace SupplyManagement.WebApp.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ItemSupplyRequest", b =>
+                {
+                    b.Property<int>("ItemsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplyRequestsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ItemsId", "SupplyRequestsId");
+
+                    b.HasIndex("SupplyRequestsId");
+
+                    b.ToTable("ItemSupplyRequest");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -233,39 +248,6 @@ namespace SupplyManagement.WebApp.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.AccountRequest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApprovedByUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTimeOffset?>("ClosedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("RequestedAccountId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApprovedByUserId");
-
-                    b.HasIndex("RequestedAccountId");
-
-                    b.ToTable("AccountRequests");
-                });
-
             modelBuilder.Entity("SupplyManagement.WebApp.Models.Item", b =>
                 {
                     b.Property<int>("Id")
@@ -282,17 +264,12 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("SupplyRequestId")
-                        .HasColumnType("int");
-
                     b.Property<int>("VendorId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("SupplyRequestId");
 
                     b.HasIndex("VendorId");
 
@@ -388,6 +365,21 @@ namespace SupplyManagement.WebApp.Data.Migrations
                     b.HasDiscriminator().HasValue("User");
                 });
 
+            modelBuilder.Entity("ItemSupplyRequest", b =>
+                {
+                    b.HasOne("SupplyManagement.WebApp.Models.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SupplyManagement.WebApp.Models.SupplyRequest", null)
+                        .WithMany()
+                        .HasForeignKey("SupplyRequestsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -439,23 +431,6 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.AccountRequest", b =>
-                {
-                    b.HasOne("SupplyManagement.WebApp.Models.User", "ApprovedBy")
-                        .WithMany()
-                        .HasForeignKey("ApprovedByUserId");
-
-                    b.HasOne("SupplyManagement.WebApp.Models.User", "RequestedAccount")
-                        .WithMany()
-                        .HasForeignKey("RequestedAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApprovedBy");
-
-                    b.Navigation("RequestedAccount");
-                });
-
             modelBuilder.Entity("SupplyManagement.WebApp.Models.Item", b =>
                 {
                     b.HasOne("SupplyManagement.WebApp.Models.User", "CreatedBy")
@@ -463,10 +438,6 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("SupplyManagement.WebApp.Models.SupplyRequest", null)
-                        .WithMany("Items")
-                        .HasForeignKey("SupplyRequestId");
 
                     b.HasOne("SupplyManagement.WebApp.Models.Vendor", "Vendor")
                         .WithMany()
@@ -515,11 +486,6 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedBy");
-                });
-
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>
-                {
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

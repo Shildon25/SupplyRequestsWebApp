@@ -1,0 +1,53 @@
+﻿@using SupplyManagement.WebApp.Models.Enums
+@model IEnumerable<SupplyManagement.WebApp.Models.ViewModels.ApproveAccountViewModel>;
+
+@{
+	ViewData["Title"] = "Accounts Approval";
+}
+<br />
+<div class="row">
+	<div class="col-6">
+		<h2 class="text-info">Accounts waiting for approval</h2>
+	</div>
+</div>
+<br />
+<div>
+	<table class="table table-striped border" id="accountsApprovalTable">
+		<thead>
+			<tr class="table-info">
+				<th>
+					@Html.DisplayNameFor(u => u!.Email)
+				</th>
+				<th>
+					@Html.DisplayNameFor(u => u!.Name)
+				</th>
+				<th>
+					@Html.DisplayNameFor(u => u!.Surname)
+				</th>
+				<th>
+					@Html.DisplayNameFor(u => u.Roles)
+				</th>
+				<th>
+					@Html.DisplayNameFor(u => u.AccountStatus)
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var user in @Model)
+			{
+				<tr>
+					<td><a asp-action="Edit" asp-route-id="@user.Id" class="link-info text-decoration-none">@user.Email</a></td>
+					<td>@user.Name</td>
+					<td>@user.Surname</td>
+					<td>@user.Roles</td>
+					<td>@Enum.GetName(typeof(AccountStatuses), user.AccountStatus)</td>
+					<td class="d-flex flex-row-reverse">
+						<a asp-action="Edit" class="btn btn-primary" asp-route-id="@user.Id">Approve</a>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<br />
+</div>

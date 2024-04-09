@@ -54,11 +54,15 @@ public class Program
 
         app.UseAuthorization();
 
-        app.MapControllerRoute(
-            name: "default",
-            pattern: "{controller=Home}/{action=Index}/{id?}");
         app.MapRazorPages();
-
+        
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllerRoute(
+                name: "default",
+                pattern: "{area=Login}/{controller=Home}/{action=Index}/{id?}"
+            );
+        });
         // Create Roles
         using (var scope = app.Services.CreateScope())
         {
@@ -92,8 +96,10 @@ public class Program
                 user.Surname = adminSection.GetSection("Surname").Value;
                 user.AccountStatus = AccountStatuses.Approved;
 
+                string[] roles = ["Admin", "Manager", "Courier", "User"];
+
                 await userManager.CreateAsync(user, password);
-                await userManager.AddToRoleAsync(user, "Admin");
+                await userManager.AddToRolesAsync(user, roles);
             }
         }
 

@@ -1,0 +1,42 @@
+﻿@model SupplyManagement.WebApp.Models.Vendor
+
+@{
+	ViewData["Title"] = "Edit Vendor";
+}
+<br />
+<h2 class="text-info">Edit Vendor</h2>
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+	<div class="p-4 rounded border container row">
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<div class="col-8">
+			<div class="form-group row my-3">
+				<div class="col-4">
+					<label asp-for="Name"></label>
+				</div>
+				<div class="col-8">
+					<input type="hidden" asp-for="Id" />
+					<input asp-for="Name" class="form-control" />
+				</div>
+				<span asp-validation-for="Name" class="text-danger"></span>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-4">
+					<label asp-for="CreatedByUserId"></label>
+				</div>
+				<div class="col-8">
+					<input asp-for="CreatedBy!.Email" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group my-3">
+				<input type="submit" class="btn btn-primary" value="Save" />
+				<a asp-action="Index" class="btn btn-success">Back to List</a>
+			</div>
+		</div>
+	</div>
+</form>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+}

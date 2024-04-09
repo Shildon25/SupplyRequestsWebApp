@@ -9,10 +9,13 @@
     {
         [Required]
         [StringLength(100)]
-        public string Name { get; set; }
+		[Display(Name = "First Name")]
+		public string Name { get; set; }
         [Required]
         [StringLength(100)]
-        public string Surname { get; set; }
-        public AccountStatuses AccountStatus {  get; set; }
+		[Display(Name = "Last Name")]
+		public string Surname { get; set; }
+		[Display(Name = "Account Status")]
+		public AccountStatuses AccountStatus {  get; set; }
     }
 }

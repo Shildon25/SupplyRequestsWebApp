@@ -1,0 +1,68 @@
+﻿@model SupplyManagement.WebApp.Models.ViewModels.ApproveAccountViewModel
+
+@{
+	ViewData["Title"] = "Approve account";
+}
+<br />
+<h2 class="text-info">Approve account</h2>
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+	<div class="p-4 rounded border container row">
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<div class="col-8">
+			<div class="form-group row my-3">
+				<div class="col-4">
+					<label asp-for="Email"></label>
+				</div>
+				<div class="col-8">
+					<input type="hidden" asp-for="Id" />
+					<input asp-for="Email" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-4">
+					<label asp-for="Name"></label>
+				</div>
+				<div class="col-8">
+					<input asp-for="Name" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-4">
+					<label asp-for="Surname"></label>
+				</div>
+				<div class="col-8">
+					<input asp-for="Surname" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-4">
+					<label asp-for="Roles"></label>
+				</div>
+				<div class="col-8">
+					<input asp-for="Roles" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-4">
+					<label asp-for="AccountStatus"></label>
+				</div>
+				<div class="col-8">
+					<select asp-for="AccountStatus" asp-items="ViewBag.accountStatuses" class="form-control form-select">
+					</select>
+				</div>
+				<span asp-validation-for="AccountStatus" class="text-danger">
+				</span>
+			</div>
+			<div class="form-group my-3">
+				<input type="submit" class="btn btn-primary" value="Save" />
+				<a asp-action="Index" class="btn btn-success">Back to List</a>
+			</div>
+		</div>
+	</div>
+</form>
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+}

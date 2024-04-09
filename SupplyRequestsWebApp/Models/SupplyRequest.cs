@@ -6,13 +6,13 @@
 
     public class SupplyRequest
     {
+        [Display(Name = "Request Id")]
         public int Id { get; set; }
-        public List<Item> Items { get; set; }
+        public List<Item> Items { get; set; } = [];
         
         public SupplyRequestStatuses Status { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset? ClosedAt { get; set; }
-        public DateTimeOffset LastUpdatedAt { get; set; }
         [Required]
         [Display(Name = "Created By")]
         public string CreatedByUserId { get; set; }

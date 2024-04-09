@@ -1,0 +1,43 @@
+﻿@model IEnumerable<SupplyManagement.WebApp.Models.Vendor>;
+
+@{
+	ViewData["Title"] = "Vendors";
+}
+<br />
+<div class="row">
+	<div class="col-6">
+		<h2 class="text-info">Vendors List</h2>
+	</div>
+	<div class="col-6 align-self-center">
+		<a asp-action="Create" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; New Vendor</a>
+	</div>
+</div>
+<br />
+<div>
+	<table class="table table-striped border" id="vendorsTable">
+		<thead>
+			<tr class="table-info">
+				<th>
+					@Html.DisplayNameFor(v => v!.Name)
+				</th>
+				<th>
+					@Html.DisplayNameFor(v => v.CreatedByUserId)
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var vendor in @Model)
+			{
+				<tr>
+					<td><a asp-action="Details" asp-route-id="@vendor.Id" class="link-info text-decoration-none">@vendor.Name</a></td>
+					<td>@vendor.CreatedBy.Email</td>
+					<td class="d-flex flex-row-reverse">
+						<partial name="~/Views/Shared/_ButtonPartial.cshtml" model="@vendor.Id" />
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<br />
+</div>
