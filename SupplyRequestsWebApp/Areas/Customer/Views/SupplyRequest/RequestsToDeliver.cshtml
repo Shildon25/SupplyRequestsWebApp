@@ -1,0 +1,62 @@
+﻿@model IEnumerable<SupplyManagement.WebApp.Models.SupplyRequest>;
+
+@{
+    ViewData["Title"] = "New Supply Requests To Deliver";
+}
+<br />
+<div class="row">
+	<div class="col-6">
+		<h2 class="text-info">New Supply Requests To Deliver List</h2>
+	</div>
+	<div class="col-6 align-self-center">
+		<a asp-action="Index" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; My Supply Requests</a>
+	</div>
+</div>
+<br />
+<div>
+	<table class="table table-striped border" id="supplyRequestTable">
+		<thead>
+			<tr class="table-info">
+				<th>
+					@Html.DisplayNameFor(r => r.Id)
+				</th>
+				<th>
+					@Html.DisplayNameFor(i => i.Status)
+				</th>
+				<th>
+					@Html.DisplayNameFor(i => i.CreatedAt)
+				</th>
+				<th>
+					@Html.DisplayNameFor(i => i.ClosedAt)
+				</th>
+				<th>
+					@Html.DisplayNameFor(i => i.ApprovedByUserId)
+				</th>
+				<th>
+					@Html.DisplayNameFor(i => i.DeliveredByUserId)
+				</th>
+				<th></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var request in @Model)
+			{
+				<tr>
+					<td><a asp-action="Details" asp-route-id="@request.Id" class="link-info text-decoration-none">@request.Id</a></td>
+					<td>@request.Status.ToString()</td>
+					<td>@request.CreatedAt.ToString()</td>
+					<td>@request.ClosedAt.ToString()</td>
+					<td>@request?.ApprovedBy?.Email </td>
+					<td>@request?.DeliveredBy?.Email</td>
+					<td class="d-flex flex-row-reverse">
+						<div class="btn-group">
+							<a asp-action="Deliver" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+							<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<br />
+</div>

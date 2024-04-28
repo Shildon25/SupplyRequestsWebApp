@@ -6,6 +6,7 @@ using System.Diagnostics;
 namespace SupplyManagement.WebApp.Areas.Login.Controllers
 {
     [Area("Login")]
+    [AllowAnonymous]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;

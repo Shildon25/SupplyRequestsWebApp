@@ -3,7 +3,6 @@
     using Microsoft.AspNetCore.Identity;
     using SupplyManagement.WebApp.Models.Enums;
     using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
 
     public class User: IdentityUser
     {

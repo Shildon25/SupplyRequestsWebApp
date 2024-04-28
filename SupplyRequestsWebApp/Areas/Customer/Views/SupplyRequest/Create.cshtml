@@ -10,12 +10,13 @@
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="form-group row my-3">
             <div class="col-2">
-                <label asp-for="ItemsIds" class="form-label">Select items:</label>
+                <label asp-for="@Model.ItemsIds" class="form-label">Select items:</label>
+                <input type="hidden" asp-for="Id" />
             </div>
             <div class="col-5">
-                <select asp-for="ItemsIds" class="form-select" asp-items="@Model.SelectedItems" />
+                <select asp-for="ItemsIds" asp-items="Model.SelectedItems" class="form-control form-select" multiple="multiple" , id="Items_dropdown">
+                </select>
             </div>
-            <span asp-validation-for="ItemsIds" class="text-danger"></span>
         </div>
         <div class="form-group my-3">
             <input type="submit" class="btn btn-primary" value="Create" />
@@ -25,8 +26,13 @@
 </form>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#Items_dropdown').multiselect({
+                disableIfEmpty: true,
+                enableFiltering: true,
+                includeSelectAllOption: true,
+            });
+        });
+    </script>
 }
-

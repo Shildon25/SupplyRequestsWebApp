@@ -9,11 +9,11 @@ using SupplyManagement.WebApp.Data;
 
 #nullable disable
 
-namespace SupplyManagement.WebApp.Data.Migrations
+namespace SupplyManagement.WebApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240408094023_AddedManyToManyForItemsAndRequests")]
-    partial class AddedManyToManyForItemsAndRequests
+    [Migration("20240410134323_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -279,6 +279,29 @@ namespace SupplyManagement.WebApp.Data.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("SupplyManagement.WebApp.Models.ItemSupplyRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SupplyRequestId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("SupplyRequestId");
+
+                    b.ToTable("ItemSupplyRequests");
+                });
+
             modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>
                 {
                     b.Property<int>("Id")
@@ -288,7 +311,6 @@ namespace SupplyManagement.WebApp.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ApprovedByUserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ClaimsText")
@@ -305,11 +327,7 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("DeliveredByUserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTimeOffset>("LastUpdatedAt")
-                        .HasColumnType("datetimeoffset");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -453,13 +471,28 @@ namespace SupplyManagement.WebApp.Data.Migrations
                     b.Navigation("Vendor");
                 });
 
+            modelBuilder.Entity("SupplyManagement.WebApp.Models.ItemSupplyRequest", b =>
+                {
+                    b.HasOne("SupplyManagement.WebApp.Models.Item", "Item")
+                        .WithMany("RequestItems")
+                        .HasForeignKey("ItemId")
+                        .IsRequired();
+
+                    b.HasOne("SupplyManagement.WebApp.Models.SupplyRequest", "SupplyRequest")
+                        .WithMany("RequestItems")
+                        .HasForeignKey("SupplyRequestId")
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("SupplyRequest");
+                });
+
             modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>
                 {
                     b.HasOne("SupplyManagement.WebApp.Models.User", "ApprovedBy")
                         .WithMany()
-                        .HasForeignKey("ApprovedByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ApprovedByUserId");
 
                     b.HasOne("SupplyManagement.WebApp.Models.User", "CreatedBy")
                         .WithMany()
@@ -469,9 +502,7 @@ namespace SupplyManagement.WebApp.Data.Migrations
 
                     b.HasOne("SupplyManagement.WebApp.Models.User", "DeliveredBy")
                         .WithMany()
-                        .HasForeignKey("DeliveredByUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("DeliveredByUserId");
 
                     b.Navigation("ApprovedBy");
 
@@ -489,6 +520,16 @@ namespace SupplyManagement.WebApp.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("SupplyManagement.WebApp.Models.Item", b =>
+                {
+                    b.Navigation("RequestItems");
+                });
+
+            modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>
+                {
+                    b.Navigation("RequestItems");
                 });
 #pragma warning restore 612, 618
         }

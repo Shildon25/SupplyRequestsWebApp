@@ -8,9 +8,24 @@
 	<div class="col-6">
 		<h2 class="text-info">My Supply Requests List</h2>
 	</div>
-	<div class="col-6 align-self-center">
-		<a asp-action="Create" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; New Supply Requests</a>
-	</div>
+	@if (User.IsInRole("User"))
+	{
+		<div class="col-6 align-self-center">
+			<a asp-action="Create" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; New Supply Requests</a>
+		</div>
+	}
+	else if (User.IsInRole("Courier"))
+	{
+		<div class="col-6 align-self-center">
+			<a asp-action="RequestsToDeliver" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Deliver New Supply Requests</a>
+		</div>
+	}
+	else if (User.IsInRole("Manager"))
+	{
+		<div class="col-6 align-self-center">
+			<a asp-action="ManagerRequests" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; My Supply Requests</a>
+		</div>
+	}
 </div>
 <br />
 <div>
@@ -19,9 +34,6 @@
 			<tr class="table-info">
 				<th>
 					@Html.DisplayNameFor(r => r.Id)
-				</th>
-				<th>
-					@Html.DisplayNameFor(r => r.Items)
 				</th>
 				<th>
 					@Html.DisplayNameFor(i => i.Status)
@@ -38,9 +50,6 @@
 				<th>
 					@Html.DisplayNameFor(i => i.DeliveredByUserId)
 				</th>
-				<th>
-					@Html.DisplayNameFor(i => i.ClaimsText)
-				</th>
 				<th></th>
 			</tr>
 		</thead>
@@ -49,16 +58,46 @@
 			{
 				<tr>
 					<td><a asp-action="Details" asp-route-id="@request.Id" class="link-info text-decoration-none">@request.Id</a></td>
-					<td>@String.Join(',',request.Items)</td>
 					<td>@request.Status.ToString()</td>
 					<td>@request.CreatedAt.ToString()</td>
 					<td>@request.ClosedAt.ToString()</td>
-					<td>@request?.ApprovedBy.Email</td>
-					<td>@request?.DeliveredBy.Email</td>
-					<td>@request?.ClaimsText</td>
-					<td class="d-flex flex-row-reverse">
-						<partial name="~/Views/Shared/_ButtonPartial.cshtml" model="@request.Id" />
-					</td>
+					<td>@request?.ApprovedBy?.Email </td>
+					<td>@request?.DeliveredBy?.Email</td>
+					@if (User.IsInRole("Manager"))
+					{
+						<td class="d-flex flex-row-reverse">
+							<div class="btn-group">
+								<a asp-action="Approve" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+								<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+							</div>
+						</td>
+					}
+					else if (User.IsInRole("Courier"))
+					{
+						<td class="d-flex flex-row-reverse">
+							<div class="btn-group">
+								<a asp-action="Delivered" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+								<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+							</div>
+						</td>
+					}
+					else if (User.IsInRole("User"))
+					{
+						if (@request.Status.ToString() == "Created")
+						{
+							<td class="d-flex flex-row-reverse">
+								<partial name="~/Views/Shared/_ButtonPartial.cshtml" model="@request.Id" />
+							</td>
+						}
+						else
+						{
+							<td class="d-flex flex-row-reverse">
+								<div class="btn-group">
+									<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+								</div>
+							</td>
+						}
+					}
 				</tr>
 			}
 		</tbody>

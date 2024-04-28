@@ -1,29 +1,53 @@
-﻿@model SupplyManagement.WebApp.Models.Item
+﻿@model SupplyManagement.WebApp.Models.SupplyRequest
 
 @{
-	ViewData["Title"] = "Details of Item";
+	ViewData["Title"] = "Details of Supply Request";
 }
 <br />
-<h2 class="text-info">Item Details</h2>
+<h2 class="text-info">Supply Request Details</h2>
 <form asp-action="Details" method="get" enctype="multipart/form-data">
 	<div class="p-4 rounded border container row">
 		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 		<div class="col-8">
 			<div class="form-group row my-3">
 				<div class="col-2">
-					<label asp-for="Name"></label>
+					<label asp-for="Id"></label>
 				</div>
 				<div class="col-5">
-					<input type="hidden" asp-for="Id" />
-					<input asp-for="Name" readonly="readonly" class="form-control" />
+					<input asp-for="Id" readonly="readonly" class="form-control" />
 				</div>
 			</div>
 			<div class="form-group row my-3">
 				<div class="col-2">
-					<label asp-for="VendorId"></label>
+					<label asp-for="Status"></label>
 				</div>
 				<div class="col-5">
-					<input asp-for="Vendor!.Name" readonly="readonly" class="form-control" />
+					<input asp-for="Status" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="RequestItems"></label>
+				</div>
+				<div class="col-5">
+					<select asp-for="RequestItems" asp-items="ViewBag.requestItems" disabled="true" class="form-control form-select">
+					</select>
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="CreatedAt"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="CreatedAt" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="ClosedAt"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="ClosedAt" readonly="readonly" class="form-control" />
 				</div>
 			</div>
 			<div class="form-group row my-3">
@@ -34,9 +58,48 @@
 					<input asp-for="CreatedBy!.Email" readonly="readonly" class="form-control" />
 				</div>
 			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="ApprovedByUserId"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="ApprovedBy!.Email" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="DeliveredByUserId"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="DeliveredBy!.Email" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="ClaimsText"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="ClaimsText" readonly="readonly" class="form-control" />
+				</div>
+			</div>
 			<div class="form-group my-3">
-				<a type="button" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
-				<a asp-action="Index" class="btn btn-success">Back to List</a>
+				@if (Model.Status.ToString() == "Created")
+				{
+					<a type="button" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+				}
+				@if (Model.Status.ToString() == "PendingDelivery")
+				{
+					<a type="button" asp-action="Delivered" asp-route-id="@Model.Id" class="btn btn-primary">Delivered</a>
+				}
+				@if (User.IsInRole("Manager") && Model.Status.ToString() != "Created")
+				{
+					<a type="button" asp-action="ResolveClaims" asp-route-id="@Model.Id" class="btn btn-primary">Resolve Claims</a>
+					<a asp-action="ManagerRequests" class="btn btn-success">Back to List</a>
+				}
+				else
+				{
+					<a asp-action="Index" class="btn btn-success">Back to List</a>
+				}
 			</div>
 		</div>
 	</div>

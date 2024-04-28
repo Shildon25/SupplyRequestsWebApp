@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -55,7 +56,7 @@ public class Program
         app.UseAuthorization();
 
         app.MapRazorPages();
-        
+
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllerRoute(
@@ -63,6 +64,7 @@ public class Program
                 pattern: "{area=Login}/{controller=Home}/{action=Index}/{id?}"
             );
         });
+
         // Create Roles
         using (var scope = app.Services.CreateScope())
         {

@@ -17,7 +17,6 @@
         public string CreatedByUserId { get; set; }
         [ForeignKey("CreatedByUserId")]
         public User CreatedBy { get; set; }
-
-        public List<SupplyRequest> SupplyRequests { get; set; } = [];
-	}
+        public List<ItemSupplyRequest> RequestItems { get; set; } = [];
+    }
 }

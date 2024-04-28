@@ -1,0 +1,55 @@
+﻿@model SupplyManagement.WebApp.Models.ViewModels.SupplyRequestViewModel
+
+@{
+	ViewData["Title"] = "Resolve Claims of the Supply Request";
+}
+<br />
+<h2 class="text-info">Resolve Claims of the Supply Request</h2>
+<form asp-action="ResolveClaims" method="post" enctype="multipart/form-data">
+	<div class="p-4 rounded border container row">
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<div class="col-8">
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="Id"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="Id" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="@Model.ItemsIds" class="form-label">Select items:</label>
+					<input type="hidden" asp-for="Id" />
+				</div>
+				<div class="col-5">
+					<select asp-for="ItemsIds" asp-items="Model.SelectedItems" disabled="true" class="form-control form-select">
+					</select>
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="ClaimsText"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="ClaimsText" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="Status"></label>
+				</div>
+				<div class="col-5">
+					<select asp-for="Status" asp-items="ViewBag.claimsRequestStatuses" class="form-control form-select">
+					</select>
+				</div>
+				<span asp-validation-for="Status" class="text-danger">
+				</span>
+			</div>
+			<div class="form-group my-3">
+				<input type="submit" class="btn btn-primary" value="Save" />
+				<a asp-action="ManagerRequests" class="btn btn-success">Back to List</a>
+			</div>
+		</div>
+	</div>
+</form>

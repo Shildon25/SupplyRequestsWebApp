@@ -1,0 +1,82 @@
+﻿@model SupplyManagement.WebApp.Models.ViewModels.SupplyRequestViewModel
+
+@{
+	ViewData["Title"] = "Delivered Supply Request";
+}
+<br />
+<h2 class="text-info">Delivered Supply Request</h2>
+<form asp-action="Delivered" method="post" enctype="multipart/form-data">
+	<div class="p-4 rounded border container row">
+		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+		<div class="col-8">
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="Id"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="Id" readonly="readonly" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="@Model.ItemsIds" class="form-label">Select items:</label>
+					<input type="hidden" asp-for="Id" />
+				</div>
+				<div class="col-5">
+					<select asp-for="ItemsIds" asp-items="Model.SelectedItems" disabled="true" class="form-control form-select">
+					</select>
+				</div>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="Status"></label>
+				</div>
+				<div class="col-5">
+					<select asp-for="Status" asp-items="ViewBag.deliveredRequestStatuses" class="form-control form-select">
+					</select>
+				</div>
+				<span asp-validation-for="Status" class="text-danger">
+				</span>
+			</div>
+			<div class="form-group row my-3">
+				<div class="col-2">
+					<label asp-for="ClaimsText"></label>
+				</div>
+				<div class="col-5">
+					<input asp-for="ClaimsText" class="form-control" />
+				</div>
+			</div>
+			<div class="form-group my-3">
+				<input type="submit" class="btn btn-primary" value="Save" />
+				<a asp-action="Index" class="btn btn-success">Back to List</a>
+			</div>
+		</div>
+	</div>
+</form>
+
+@section scripts {
+		<script>
+			// Function to enable/disable ClaimsText input based on selected Status value
+			function toggleClaimsTextInput() {
+				var statusSelect = document.getElementById("Status");
+				var claimsTextInput = document.getElementById("ClaimsText");
+
+				// Get the selected option value
+				var selectedStatus = statusSelect.value;
+
+				// Check if selectedStatus is equal to specific value that enables the input
+				if (selectedStatus === "6") {
+					claimsTextInput.disabled = false;
+				} else {
+					claimsTextInput.value = "";
+					claimsTextInput.disabled = true;
+				}
+			}
+
+			// Call the function initially and bind it to the change event of the Status dropdown
+			document.addEventListener("DOMContentLoaded", function () {
+				toggleClaimsTextInput(); // Initial call
+				document.getElementById("Status").addEventListener("change", toggleClaimsTextInput);
+			});
+		</script>
+}
