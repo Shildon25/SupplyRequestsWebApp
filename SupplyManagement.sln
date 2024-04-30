@@ -5,13 +5,13 @@ VisualStudioVersion = 17.9.34607.119
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SupplyManagement.WebApp", "SupplyRequestsWebApp\SupplyManagement.WebApp.csproj", "{3FDF0BEA-1FDA-4226-8066-2FFDA256C248}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocumentGeneratorApp", "DocumentGenerator\DocumentGeneratorApp.csproj", "{86E38368-A605-400F-B4C2-A68910CD731D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SupplyManagement.Helpers", "Helpers\SupplyManagement.Helpers.csproj", "{05FFB4C0-E2D3-49C6-B429-D3B351619646}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupplyManagement.Models", "SupplyManagement.Models\SupplyManagement.Models.csproj", "{1C9010AE-8A12-4FE8-A2F5-62368F0DEDC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SupplyManagement.Models", "SupplyManagement.Models\SupplyManagement.Models.csproj", "{1C9010AE-8A12-4FE8-A2F5-62368F0DEDC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupplyManagement.Services", "SupplyManagement.Services\SupplyManagement.Services.csproj", "{863E3192-9BAE-420F-9B42-5F751AA2C9B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SupplyManagement.Services", "SupplyManagement.Services\SupplyManagement.Services.csproj", "{863E3192-9BAE-420F-9B42-5F751AA2C9B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentGeneratorService", "DocumentGeneratorService\DocumentGeneratorService.csproj", "{90BF4A73-10AD-4D25-BFD2-5605B6A70030}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,6 @@ Global
 		{3FDF0BEA-1FDA-4226-8066-2FFDA256C248}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3FDF0BEA-1FDA-4226-8066-2FFDA256C248}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3FDF0BEA-1FDA-4226-8066-2FFDA256C248}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86E38368-A605-400F-B4C2-A68910CD731D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86E38368-A605-400F-B4C2-A68910CD731D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86E38368-A605-400F-B4C2-A68910CD731D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86E38368-A605-400F-B4C2-A68910CD731D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{05FFB4C0-E2D3-49C6-B429-D3B351619646}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{05FFB4C0-E2D3-49C6-B429-D3B351619646}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{05FFB4C0-E2D3-49C6-B429-D3B351619646}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -39,6 +35,10 @@ Global
 		{863E3192-9BAE-420F-9B42-5F751AA2C9B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{863E3192-9BAE-420F-9B42-5F751AA2C9B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{863E3192-9BAE-420F-9B42-5F751AA2C9B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90BF4A73-10AD-4D25-BFD2-5605B6A70030}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90BF4A73-10AD-4D25-BFD2-5605B6A70030}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90BF4A73-10AD-4D25-BFD2-5605B6A70030}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90BF4A73-10AD-4D25-BFD2-5605B6A70030}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

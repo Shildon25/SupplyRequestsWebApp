@@ -2,9 +2,9 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
-namespace SupplyManagement.DocumentGeneratorApp
+namespace SupplyManagement.DocumentGeneratorService
 {
-	public static class DocumentGenerator
+    public static class DocumentGenerator
 	{
 		public static void GenerateSupplyDocument(SupplyDocument supplyDocument, string filePath)
 		{

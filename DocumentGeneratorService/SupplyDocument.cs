@@ -1,8 +1,6 @@
-﻿using SupplyManagement.Models;
-
-namespace SupplyManagement.DocumentGeneratorApp
+﻿namespace SupplyManagement.DocumentGeneratorService
 {
-	public class SupplyDocument
+    public class SupplyDocument
 	{
 		public SupplyDocument(int requestId, string requestOwnerName, string approvalManagerName, List<string> itemsList)
 		{

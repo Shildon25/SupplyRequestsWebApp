@@ -1,8 +1,6 @@
-﻿using SupplyManagement.Models;
-
-namespace SupplyManagement.DocumentGeneratorApp
+﻿namespace SupplyManagement.DocumentGeneratorService
 {
-	public class ClaimsDocument: SupplyDocument
+    public class ClaimsDocument: SupplyDocument
 	{
 		public ClaimsDocument(int requestId, string requestOwnerName, string approvalManagerName, string courierName, string claimsText, List<string> itemsList)
 		: base(requestId, requestOwnerName, approvalManagerName, itemsList)
