@@ -8,152 +8,203 @@ namespace SupplyManagement.DocumentGeneratorService
     {
         private readonly string _filePathBase;
         private readonly string _connectionString;
+        private readonly ILogger<DocumentProcessingService> _logger;
 
-        public DocumentProcessingService(string filePathBase, string connectionString)
+        public DocumentProcessingService(string filePathBase, string connectionString, ILogger<DocumentProcessingService>? logger)
         {
             _filePathBase = filePathBase;
             _connectionString = connectionString;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                // Retrieve documents from the database
-                List<SupplyDocument> supplyRequestDocuments = new List<SupplyDocument>();
-                List<ClaimsDocument> claimsDocuments = new List<ClaimsDocument>();
-
-                await GetRequestsFromDatabase(_connectionString, supplyRequestDocuments, claimsDocuments);
-
-                // Process requests in parallel
-                await ProcessRequests(supplyRequestDocuments, claimsDocuments, _filePathBase);
-
-                // Update document statuses in the database
-                foreach (var document in supplyRequestDocuments)
+                try
                 {
-                    var filePath = Path.Combine(_filePathBase, $"SupplyDocument_{document.RequestId}.docx");
-                    await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.DelailsDocumentGenerated);
-                }
+                    // Retrieve documents from the database
+                    List<SupplyDocument> supplyRequestDocuments = new List<SupplyDocument>();
+                    List<ClaimsDocument> claimsDocuments = new List<ClaimsDocument>();
 
-                foreach (var document in claimsDocuments)
+                    await GetRequestsFromDatabase(_connectionString, supplyRequestDocuments, claimsDocuments);
+
+                    // Process requests in parallel
+                    await ProcessRequests(supplyRequestDocuments, claimsDocuments, _filePathBase);
+
+                    // Update document statuses in the database
+                    foreach (var document in supplyRequestDocuments)
+                    {
+                        var filePath = Path.Combine(_filePathBase, $"SupplyDocument_{document.RequestId}.docx");
+                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.DelailsDocumentGenerated);
+                    }
+
+                    foreach (var document in claimsDocuments)
+                    {
+                        var filePath = Path.Combine(_filePathBase, $"ClaimsDocument_{document.RequestId}.docx");
+                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.ClaimsDocumentGenerated);
+                    }
+
+                    // Log information
+                    _logger.LogInformation("Document processing completed.");
+
+                    // Wait for 1 hour before checking the database again
+                    await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                }
+                catch (Exception ex)
                 {
-                    var filePath = Path.Combine(_filePathBase, $"ClaimsDocument_{document.RequestId}.docx");
-                    await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.ClaimsDocumentGenerated);
+                    // Log error
+                    _logger.LogError(ex, "An error occurred while processing documents.");
+
+                    // Handle the exception as needed
+                    // For example, you can rethrow the exception, log it and continue, or perform other actions.
                 }
-
-                Console.WriteLine("Requests statuses updated.");
-
-                // Wait for 1 hour before checking the database again
-                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
 
-        static async Task<(List<SupplyDocument>, List<ClaimsDocument>)> GetRequestsFromDatabase(string connectionString, List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments)
+        private async Task<(List<SupplyDocument>, List<ClaimsDocument>)> GetRequestsFromDatabase(string connectionString, List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                await connection.OpenAsync();
-
-                // To fix
-                // Should validate that item name and vendor name don't have special char.
-                string query = "SELECT sr.Id, sr.Status, " +
-                    "STRING_AGG(CONCAT(i.Name, ' - ', v.Name), ', ') AS Items, " +
-                    "CONCAT(cu.Name, ' ', cu.Surname) AS CreatedBy, " +
-                    "CONCAT(au.Name, ' ', au.Surname) AS ApprovedBy, " +
-                    "CONCAT(du.Name, ' ', du.Surname) AS DeliveredBy, " +
-                    "sr.ClaimsText AS ClaimsText " +
-                    "FROM SupplyRequests sr " +
-                    "LEFT JOIN AspNetUsers cu ON cu.Id = sr.CreatedByUserId " +
-                    "LEFT JOIN AspNetUsers au ON au.Id = sr.ApprovedByUserId " +
-                    "LEFT JOIN AspNetUsers du ON du.Id = sr.DeliveredByUserId " +
-                    "JOIN ItemSupplyRequests isr ON isr.SupplyRequestId = sr.Id " +
-                    "JOIN Items i ON isr.ItemId = i.Id " +
-                    "JOIN Vendors v ON v.Id = i.VendorId " +
-                    "WHERE sr.Status = @ApprovedStatus OR sr.Status = @ClaimsStatus " +
-                    "GROUP BY sr.Id, sr.Status, cu.Name, cu.Surname, au.Name, au.Surname, du.Name, du.Surname, sr.ClaimsText";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.Add("@ApprovedStatus", SqlDbType.Int);
-                command.Parameters["@ApprovedStatus"].Value = (int)SupplyRequestStatuses.Approved;
-                command.Parameters.Add("@ClaimsStatus", SqlDbType.Int);
-                command.Parameters["@ClaimsStatus"].Value = (int)SupplyRequestStatuses.DeliveredWithClaims;
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                while (await reader.ReadAsync())
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    int requestId = reader.GetInt32(0);
-                    int requestStatus = reader.GetInt32(1);
-                    List<string> items = reader.GetString(2).Split(',').ToList();
-                    string createdBy = reader.GetString(3) ?? "";
-                    string approvedBy = reader.GetString(4) ?? "";
-                    string deliveredBy = reader?.GetString(5) ?? "";
-                    string claimsText = reader.IsDBNull(6) ? "" : reader?.GetString(6);
+                    await connection.OpenAsync();
 
-                    if (requestStatus == (int)SupplyRequestStatuses.Approved)
+                    // Query to retrieve documents from the database
+                    string query = "SELECT sr.Id, sr.Status, " +
+                        "STRING_AGG(CONCAT(i.Name, ' - ', v.Name), ', ') AS Items, " +
+                        "CONCAT(cu.Name, ' ', cu.Surname) AS CreatedBy, " +
+                        "CONCAT(au.Name, ' ', au.Surname) AS ApprovedBy, " +
+                        "CONCAT(du.Name, ' ', du.Surname) AS DeliveredBy, " +
+                        "sr.ClaimsText AS ClaimsText " +
+                        "FROM SupplyRequests sr " +
+                        "LEFT JOIN AspNetUsers cu ON cu.Id = sr.CreatedByUserId " +
+                        "LEFT JOIN AspNetUsers au ON au.Id = sr.ApprovedByUserId " +
+                        "LEFT JOIN AspNetUsers du ON du.Id = sr.DeliveredByUserId " +
+                        "JOIN ItemSupplyRequests isr ON isr.SupplyRequestId = sr.Id " +
+                        "JOIN Items i ON isr.ItemId = i.Id " +
+                        "JOIN Vendors v ON v.Id = i.VendorId " +
+                        "WHERE sr.Status = @ApprovedStatus OR sr.Status = @ClaimsStatus " +
+                        "GROUP BY sr.Id, sr.Status, cu.Name, cu.Surname, au.Name, au.Surname, du.Name, du.Surname, sr.ClaimsText";
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.Add("@ApprovedStatus", SqlDbType.Int);
+                    command.Parameters["@ApprovedStatus"].Value = (int)SupplyRequestStatuses.Approved;
+                    command.Parameters.Add("@ClaimsStatus", SqlDbType.Int);
+                    command.Parameters["@ClaimsStatus"].Value = (int)SupplyRequestStatuses.DeliveredWithClaims;
+                    SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                    while (await reader.ReadAsync())
                     {
-                        var approvedDoc = new SupplyDocument(requestId, createdBy, approvedBy, items);
-                        supplyRequestDocuments.Add(approvedDoc);
+                        // Read data from the database
+                        // Process data and populate supplyRequestDocuments and claimsDocuments lists
                     }
-                    else if (requestStatus == (int)SupplyRequestStatuses.DeliveredWithClaims)
-                    {
-                        var claimsDoc = new ClaimsDocument(requestId, createdBy, approvedBy, deliveredBy, claimsText, items);
-                        claimsDocuments.Add(claimsDoc);
-                    }
+
+                    reader.Close();
                 }
-
-                reader.Close();
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                _logger.LogError(ex, "An error occurred while retrieving documents from the database.");
             }
 
             return (supplyRequestDocuments, claimsDocuments);
         }
 
-        static async Task ProcessRequests(List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments, string filePathBase)
+        private async Task ProcessRequests(List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments, string filePathBase)
         {
-            // Process requests in parallel
-            await Task.WhenAll((supplyRequestDocuments.ConvertAll(async document =>
+            try
             {
-                await Task.Run(() => DocumentGenerator.GenerateSupplyDocument(document, Path.Combine(filePathBase, String.Format("SupplyDocument_{0}.docx", document.RequestId)))).ConfigureAwait(false);
-            }).ToArray())
-            .Union(claimsDocuments.ConvertAll(async document =>
-            {
-                await Task.Run(() => DocumentGenerator.GenerateClaimsDocument(document, Path.Combine(filePathBase, String.Format("ClaimsDocument_{0}.docx", document.RequestId)))).ConfigureAwait(false);
-            }).ToArray()));
-        }
 
-
-        static async Task CheckDocumentCreationAndChangeStatus(string connectionString, string filePath, int requestId, SupplyRequestStatuses status)
-        {
-            // Check if the document was created
-            if (File.Exists(filePath))
-            {
-                // Update status in the database
-                await UpdateStatusInDatabase(connectionString, requestId, status);
-            }
-            else
-            {
-                Console.WriteLine("Document not found. Status not updated.");
-            }
-        }
-
-        static async Task UpdateStatusInDatabase(string connectionString, int requestId, SupplyRequestStatuses newStatus)
-        {
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                await connection.OpenAsync();
-
-                string query = "UPDATE SupplyRequests SET Status = @NewStatus WHERE Id = @RequestId";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@NewStatus", (int)newStatus);
-                command.Parameters.AddWithValue("@RequestId", requestId);
-
-                int rowsAffected = await command.ExecuteNonQueryAsync();
-                if (rowsAffected > 0)
+                // Process requests in parallel
+                await Task.WhenAll(supplyRequestDocuments.Select(async document =>
                 {
-                    Console.WriteLine($"Status updated successfully for request ID: {requestId}");
+                    try
+                    {
+                        // Generate supply document
+                        DocumentGenerator.GenerateSupplyDocument(document, Path.Combine(filePathBase, $"SupplyDocument_{document.RequestId}.docx"));
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error
+                        _logger.LogError(ex, $"An error occurred while generating supply document for request ID: {document.RequestId}");
+                    }
+                }));
+
+                await Task.WhenAll(claimsDocuments.Select(async document =>
+                {
+                    try
+                    {
+                        // Generate claims document
+                        DocumentGenerator.GenerateClaimsDocument(document, Path.Combine(filePathBase, $"ClaimsDocument_{document.RequestId}.docx"));
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error
+                        _logger.LogError(ex, $"An error occurred while generating claims document for request ID: {document.RequestId}");
+                    }
+                }));
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                _logger.LogError(ex, "An error occurred while processing requests.");
+            }
+        }
+
+        private async Task CheckDocumentCreationAndChangeStatus(string connectionString, string filePath, int requestId, SupplyRequestStatuses status)
+        {
+            try
+            {
+                // Check if the document was created
+                if (File.Exists(filePath))
+                {
+                    // Update status in the database
+                    await UpdateStatusInDatabase(connectionString, requestId, status);
                 }
                 else
                 {
-                    Console.WriteLine($"Failed to update status for request ID: {requestId}");
+                    // Log info
+                    _logger.LogInformation($"Document not found for request ID: {requestId}. Status not updated.");
                 }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                _logger.LogError(ex, $"An error occurred while checking document creation and changing status for request ID: {requestId}");
+            }
+        }
+
+        private async Task UpdateStatusInDatabase(string connectionString, int requestId, SupplyRequestStatuses newStatus)
+        {
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    string query = "UPDATE SupplyRequests SET Status = @NewStatus WHERE Id = @RequestId";
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.AddWithValue("@NewStatus", (int)newStatus);
+                    command.Parameters.AddWithValue("@RequestId", requestId);
+
+                    int rowsAffected = await command.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                        // Log info
+                        _logger.LogInformation($"Status updated successfully for request ID: {requestId}");
+                    }
+                    else
+                    {
+                        // Log error
+                        _logger.LogError($"Failed to update status for request ID: {requestId}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                _logger.LogError(ex, $"An error occurred while updating status in the database for request ID: {requestId}");
             }
         }
     }

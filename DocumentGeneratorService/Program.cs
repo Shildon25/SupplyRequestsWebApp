@@ -1,6 +1,10 @@
 using SupplyManagement.DocumentGeneratorService;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 builder.Services.AddHostedService<DocumentProcessingService>(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
