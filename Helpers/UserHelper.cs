@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNet.Identity.EntityFramework;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
+using SupplyManagement.Models;
 
 namespace SupplyManagement.Helpers
 {
@@ -9,20 +9,15 @@ namespace SupplyManagement.Helpers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger _logger;
-        private readonly ClaimsPrincipal _user;
 
-        public UserHelper(UserManager<IdentityUser> userManager, ILogger logger, ClaimsPrincipal user)
+        public UserHelper(UserManager<IdentityUser> userManager, ILogger logger)
         {
             _userManager = userManager;
             _logger = logger;
-            _user = user;
         }
 
-        private async Task<(string, IdentityUser)> GetUserAsync()
+        public async Task<(string, User)> GetCurrentUserAsync(ClaimsPrincipal currentUser)
         {
-            // Get the current user
-            var currentUser = _user;
-
             // Check if the current user is null
             if (currentUser == null)
             {
@@ -45,7 +40,7 @@ namespace SupplyManagement.Helpers
             }
 
             // Find the user by user id
-            var foundUser = await _userManager.FindByIdAsync(userId);
+            var foundUser = (User)await _userManager.FindByIdAsync(userId);
 
             return (userId, foundUser);
         }

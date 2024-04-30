@@ -1,15 +1,15 @@
-﻿@model IEnumerable<SupplyManagement.WebApp.Models.SupplyRequest>;
+﻿@model IEnumerable<SupplyManagement.Models.SupplyRequest>;
 
 @{
-    ViewData["Title"] = "My Supply Requests";
+    ViewData["Title"] = "Supply Requests To Approve";
 }
 <br />
 <div class="row">
 	<div class="col-6">
-		<h2 class="text-info">My Supply Requests</h2>
+		<h2 class="text-info">Supply Requests To Approve</h2>
 	</div>
 	<div class="col-6 align-self-center">
-		<a asp-action="Index" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Supply Requests to Approve</a>
+		<a asp-action="Index" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; My Supply Requests</a>
 	</div>
 </div>
 <br />
@@ -50,10 +50,7 @@
 					<td>@request?.DeliveredBy?.Email</td>
 					<td class="d-flex flex-row-reverse">
 						<div class="btn-group">
-							@if (@request.Status.ToString() == "ClaimsDocumentGenerated")
-							{
-								<a asp-action="ResolveClaims" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-							}
+							<a asp-action="Approve" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
 							<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
 						</div>
 					</td>

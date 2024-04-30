@@ -1,16 +1,24 @@
-﻿namespace SupplyManagement.Models.Enums
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SupplyManagement.Models.Enums
 {
     public enum SupplyRequestStatuses
     {
         Created,
-        ApprovedByManager,
-        RejectedByManager,
+        Approved,
+        Rejected,
+        [Display(Name = "Details Document Generated")]
         DelailsDocumentGenerated,
-        PendingDelivery,
+		[Display(Name = "Pending Delivery")]
+		PendingDelivery,
         Delivered,
-        DeliveredWithClaims,
-        ClaimsDocumentGenerated,
-        ClaimsEliminated,
-        MoneyRetured,
+		[Display(Name = "Delivered With Claims")]
+		DeliveredWithClaims,
+		[Display(Name = "Claims Document Generated")]
+		ClaimsDocumentGenerated,
+		[Display(Name = "Claims Eliminated")]
+		ClaimsEliminated,
+		[Display(Name = "Money Returned")]
+		MoneyRetured,
     }
 }

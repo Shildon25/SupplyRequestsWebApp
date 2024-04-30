@@ -1,4 +1,4 @@
-﻿@model SupplyManagement.WebApp.Models.SupplyRequest
+﻿@model SupplyManagement.Models.SupplyRequest
 
 @{
 	ViewData["Title"] = "Details of Supply Request";
@@ -83,22 +83,51 @@
 				</div>
 			</div>
 			<div class="form-group my-3">
-				@if (Model.Status.ToString() == "Created")
+				@if (User.IsInRole("Manager"))
 				{
-					<a type="button" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+					if (Model.Status.ToString() == "Created")
+					{
+						<a type="button" asp-action="Approve" asp-route-id="@Model.Id" class="btn btn-primary">Approve</a>
+						<a asp-action="ManagerRequestsToApprove" class="btn btn-success">Back to List</a>
+					}
+					else if (Model.Status.ToString() == "ClaimsDocumentGenerated")
+					{
+						<a type="button" asp-action="ResolveClaims" asp-route-id="@Model.Id" class="btn btn-primary">Resolve Claims</a>
+						<a asp-action="Index" class="btn btn-success">Back to List</a>
+					}
+					else
+					{
+						<a asp-action="Index" class="btn btn-success">Back to List</a>
+					}
 				}
-				@if (Model.Status.ToString() == "PendingDelivery")
+				else if (User.IsInRole("Courier"))
 				{
-					<a type="button" asp-action="Delivered" asp-route-id="@Model.Id" class="btn btn-primary">Delivered</a>
+					if (Model.Status.ToString() == "PendingDelivery")
+					{
+						<a type="button" asp-action="Delivered" asp-route-id="@Model.Id" class="btn btn-primary">Delivered</a>
+						<a asp-action="Index" class="btn btn-success">Back to List</a>
+					}
+					else if (Model.Status.ToString() == "DelailsDocumentGenerated")
+					{
+						<a type="button" asp-action="Deliver" asp-route-id="@Model.Id" class="btn btn-primary">Deliver</a>
+						<a asp-action="RequestsToDeliver" class="btn btn-success">Back to List</a>
+					}
+					else
+					{
+						<a asp-action="Index" class="btn btn-success">Back to List</a>
+					}
 				}
-				@if (User.IsInRole("Manager") && Model.Status.ToString() != "Created")
+				else if (User.IsInRole("User"))
 				{
-					<a type="button" asp-action="ResolveClaims" asp-route-id="@Model.Id" class="btn btn-primary">Resolve Claims</a>
-					<a asp-action="ManagerRequests" class="btn btn-success">Back to List</a>
-				}
-				else
-				{
-					<a asp-action="Index" class="btn btn-success">Back to List</a>
+					if (Model.Status.ToString() == "Created")
+					{
+						<a type="button" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+						<a asp-action="Index" class="btn btn-success">Back to List</a>
+					}
+					else
+					{
+						<a asp-action="Index" class="btn btn-success">Back to List</a>
+					}
 				}
 			</div>
 		</div>

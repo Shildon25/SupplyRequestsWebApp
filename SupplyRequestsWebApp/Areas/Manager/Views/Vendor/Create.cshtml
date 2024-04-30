@@ -1,4 +1,4 @@
-﻿@model SupplyManagement.WebApp.Models.Vendor
+﻿@model SupplyManagement.Models.Vendor
 
 @{
     ViewData["Title"] = "Create Vendor";
@@ -6,6 +6,7 @@
 <br />
 <h2 class="text-info">Create Vendor</h2>
 <form asp-action="Create" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
     <div class="p-4 rounded border p">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="form-group row my-3">

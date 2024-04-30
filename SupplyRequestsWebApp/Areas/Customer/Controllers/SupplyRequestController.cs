@@ -2,27 +2,35 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using SupplyManagement.Helpers;
+using SupplyManagement.Models;
+using SupplyManagement.Models.Enums;
+using SupplyManagement.Models.ViewModels;
+using SupplyManagement.Services;
 using SupplyManagement.WebApp.Data;
-using SupplyManagement.WebApp.Models;
-using SupplyManagement.WebApp.Models.Enums;
-using SupplyManagement.WebApp.Models.ViewModels;
-using System.Security.Claims;
+using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 {
-    [Area("Customer")]
+	[Area("Customer")]
 	public class SupplyRequestController : Controller
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly UserManager<IdentityUser> _userManager;
 		private readonly ILogger<SupplyRequestController> _logger;
+		private readonly UserHelper _userHelper;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-		public SupplyRequestController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<SupplyRequestController>? logger)
+
+        public SupplyRequestController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<SupplyRequestController>? logger, IHubContext<NotificationHub>? hubContext)
 		{
 			_context = context;
 			_userManager = userManager;
 			_logger = logger;
+            _userHelper = new UserHelper(userManager, logger);
+            _hubContext = hubContext;
 		}
 
 		// GET: Supply Requests
@@ -37,23 +45,24 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("Supply requests context is null.");
-                    return Problem("Entity set 'Application_contextContext.SupplyRequests' is null");
-                }
+                    throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
+				}
 
                 // Initialize a list to store supply requests
                 List<SupplyRequest> requests = [];
 
                 // Get the current user id
-                var (userId, _) = await this.GetUserAsync().ConfigureAwait(false);
+                var (userId, _) = await this._userHelper.GetCurrentUserAsync(User).ConfigureAwait(false);
 
                 if (User.IsInRole("Manager"))
 				{
-					_logger.LogInformation("Get requests to approve for Manager with id: {id}", userId);
+					// Retrieve supply requests approved by the current user
+					_logger.LogInformation("Get requests approved by Manager with id: {id}", userId);
 					requests = await _context.SupplyRequests
 						.Include(r => r.CreatedBy)
 						.Include(r => r.ApprovedBy)
 						.Include(r => r.DeliveredBy)
-						.Where(r => r.Status == SupplyRequestStatuses.Created)
+						.Where(r => r.ApprovedBy != null && r.ApprovedBy.Id == userId)
 						.ToListAsync();
 				}
 				else if (User.IsInRole("Courier"))
@@ -90,10 +99,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the retrieval of the supply request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving supply request. {meesage}", ex.Message)));
+			}
         }
 
 		// GET: SupplyRequestControlller/Details/5
@@ -107,14 +116,14 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 if (id == null)
                 {
                     _logger.LogWarning("Supply request id is null.");
-                    return NotFound();
-                }
+					throw new ArgumentNullException(nameof(id));
+				}
 
                 // Check if there are any supply requests in the context
                 if (!_context.SupplyRequests.Any())
                 {
                     _logger.LogWarning("No supply requests found in the database.");
-                    return NotFound();
+                    throw new Exception("No supply requests found in the database.");
                 }
 
                 // Fetch the supply request along with related entities from the database
@@ -129,8 +138,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 if (request == null)
                 {
                     _logger.LogWarning("Supply request with id {RequestId} not found.", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Fetch request items related to the supply request from the database
                 var requestItems = await (from i in _context.Items
@@ -158,8 +167,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 
                 // Handle the exception gracefully, perhaps redirecting to an error page
                 // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the details request. {meesage}", ex.Message)));
+			}
         }
 
         // GET: SupplyRequestControlller/Create
@@ -192,19 +201,19 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 
                 // Log information about the successful retrieval of items
                 _logger.LogInformation("Successfully retrieved {ItemCount} items from the database.", items?.Count ?? 0);
-            }
+
+				// Return the populated view model to the corresponding view
+				return View(model);
+			}
             catch (Exception ex)
             {
                 // Log any exceptions that occur during item retrieval
-                _logger.LogError(ex, "An error occurred while fetching items from the database.");
+                _logger.LogError(ex, "An error occurred while displaying create view for supply request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
-
-            // Return the populated view model to the corresponding view
-            return View(model);
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying create view for supply request. {meesage}", ex.Message)));
+			}
         }
 
         // POST: SupplyRequestControlller/Create
@@ -220,7 +229,7 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 List<ItemSupplyRequest> requestItems = new List<ItemSupplyRequest>();
 
                 // Get the current user
-                var (userId, foundUser) = await this.GetUserAsync().ConfigureAwait(false);
+                var (userId, foundUser) = await this._userHelper.GetCurrentUserAsync(User).ConfigureAwait(false);
 
                 // Set supply request properties
                 request.Status = SupplyRequestStatuses.Created;
@@ -269,15 +278,15 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the creation of the supply request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the creation of the supply request. {meesage}", ex.Message)));
+			}
         }
 
-        // GET: SupplyRequestControlller/Edit/5
-        [Authorize(Policy = "User")]
-        public async Task<IActionResult> Edit(int? id)
+		// GET: SupplyRequestControlller/Edit/5
+		[Authorize(Roles = "User")]
+		public async Task<IActionResult> Edit(int? id)
         {
             try
             {
@@ -286,8 +295,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if id is null or supply requests context is null
                     _logger.LogError("Supply request id is null or supply requests context is null.");
-                    return NotFound();
-                }
+					throw new ArgumentNullException(nameof(id));
+				}
 
                 // Initialize a view model and a list to store item ids
                 SupplyRequestViewModel model = new SupplyRequestViewModel();
@@ -301,16 +310,17 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply request is null
                     _logger.LogError("Supply request with id {RequestId} not found.", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Check if the status of the supply request is not 'Created'
                 if (request.Status != SupplyRequestStatuses.Created)
                 {
                     // Log an error if the status of the supply request is not 'Created'
                     _logger.LogError("Cannot edit supply request with id {RequestId} because its status is not 'Created'.", id);
-                    return BadRequest();
-                }
+                    throw new InvalidDataException("Cannot edit supply request with id because its status is not 'Created'.");
+
+				}
 
                 // Get the item ids associated with the supply request and add them to the itemsIds list
                 request.RequestItems.ToList().ForEach(i => itemsIds.Add(i.Id));
@@ -337,17 +347,17 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the edit request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the edit request. {meesage}", ex.Message)));
+			}
         }
 
         // POST: SupplyRequestControlller/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Policy = "User")]
-        public async Task<IActionResult> Edit(int id, SupplyRequestViewModel model)
+		[Authorize(Roles = "User")]
+		public async Task<IActionResult> Edit(int id, SupplyRequestViewModel model)
         {
             try
             {
@@ -356,7 +366,7 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the ids do not match
                     _logger.LogError("Ids do not match: id in route {RouteId}, id in model {ModelId}.", id, model.Id);
-                    return NotFound();
+                    throw new ArgumentException("Incorrect request id.");
                 }
 
                 // Check if the status of the model is not 'Created'
@@ -364,8 +374,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the status is not 'Created'
                     _logger.LogError("Cannot edit supply request with id {RequestId} because its status is not 'Created'.", id);
-                    return BadRequest();
-                }
+					throw new InvalidDataException("Cannot edit supply request with id because its status is not 'Created'.");
+				}
 
                 // Initialize a list to store item supply requests
                 List<ItemSupplyRequest> requestItems = new List<ItemSupplyRequest>();
@@ -378,8 +388,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply request is null
                     _logger.LogError("Supply request with id {RequestId} not found.", model.Id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Remove existing request items from the context
                 request.RequestItems.ToList().ForEach(i => requestItems.Add(i));
@@ -429,10 +439,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the edit request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the edit request. {meesage}", ex.Message)));
+			}
         }
 
         // GET: SupplyRequestControlller/Approve/5
@@ -446,8 +456,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if id is null or supply requests context is null
                     _logger.LogError("Supply request id is null or supply requests context is null.");
-                    return NotFound();
-                }
+                    throw new ArgumentNullException(nameof(id));
+				}
 
                 // Initialize a view model and a list to store item ids
                 SupplyRequestViewModel model = new SupplyRequestViewModel();
@@ -461,8 +471,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply request is null
                     _logger.LogError("Supply request with id {RequestId} not found.", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Get the item ids associated with the supply request and add them to the itemsIds list
                 request.RequestItems.ToList().ForEach(i => itemsIds.Add(i.Id));
@@ -495,10 +505,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the approval request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the approval request. {meesage}", ex.Message)));
+			}
         }
 
         // POST: SupplyRequestControlller/Approve/5
@@ -514,30 +524,30 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the ids do not match
                     _logger.LogError("Ids do not match: id in route {RouteId}, id in model {ModelId}.", id, model.Id);
-                    return NotFound();
-                }
+					throw new ArgumentException("Incorrect request id.");
+				}
 
                 // Check if the status of the model is not 'Approved' or 'Rejected'
                 if (model.Status != SupplyRequestStatuses.Approved && model.Status != SupplyRequestStatuses.Rejected)
                 {
                     // Log an error if the status is not 'Approved' or 'Rejected'
                     _logger.LogError("Invalid status {Status} provided for approval.", model.Status);
-                    return BadRequest();
-                }
+					throw new InvalidDataException("Invalid status 'Status' provided for approval.");
+				}
 
                 // Get the supply request from the context
-                var request = await _context.SupplyRequests.FirstOrDefaultAsync(x => x.Id == model.Id);
+                var request = await _context.SupplyRequests.Include(r => r.CreatedBy).FirstOrDefaultAsync(x => x.Id == model.Id);
 
                 // Check if the supply request is null
                 if (request == null)
                 {
                     // Log an error if the supply request is null
                     _logger.LogError("Supply request with id {RequestId} not found.", model.Id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Get the current user
-                var (userId, foundUser) = await this.GetUserAsync().ConfigureAwait(false);
+                var (userId, foundUser) = await this._userHelper.GetCurrentUserAsync(User).ConfigureAwait(false);
 
                 // Update supply request details
                 request.ApprovedBy = foundUser;
@@ -548,26 +558,37 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 _context.SupplyRequests.Update(request);
                 await _context.SaveChangesAsync();
 
+                if (request.Status == SupplyRequestStatuses.Approved)
+                {
+                    // Send approved notification to the user
+                    await _hubContext.Clients.User(request.CreatedBy.Id).SendAsync("ReceiveNotification", "Your request has been approved.");
+                }
+                else
+                {
+                    // Send rejected notification to the user
+                    await _hubContext.Clients.User(request.CreatedBy.Id).SendAsync("ReceiveNotification", "Your request has been rejected.");
+                }
+
                 // Log information about successful approval of the supply request
                 _logger.LogInformation("Supply request with id {RequestId} successfully approved/rejected.", model.Id);
 
                 // Redirect to index action
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(ManagerRequestsToApprove));
             }
             catch (Exception ex)
             {
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the approval request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the approval request. {meesage}", ex.Message)));
+			}
         }
 
-        // GET: SupplyRequestControlller/ManagerRequests
-        [Authorize(Policy = "Manager")]
-        public async Task<IActionResult> ManagerRequests()
+		// GET: SupplyRequestControlller/ManagerRequestsToApprove
+		[Authorize(Policy = "Manager")]
+        public async Task<IActionResult> ManagerRequestsToApprove()
         {
             try
             {
@@ -576,26 +597,23 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("Supply requests context is null.");
-                    return Problem("Entity set 'Application_contextContext.SupplyRequests' is null");
+                    throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
                 }
 
                 // Initialize a list to store supply requests
                 List<SupplyRequest> requests = [];
 
-                // Get the current user's id
-                var (userId, _) = await this.GetUserAsync().ConfigureAwait(false);
+				// Retrieve supply requests to be approved by the current user
+				_logger.LogInformation("Get requests to approve for Manager.");
+				requests = await _context.SupplyRequests
+					.Include(r => r.CreatedBy)
+					.Include(r => r.ApprovedBy)
+					.Include(r => r.DeliveredBy)
+					.Where(r => r.Status == SupplyRequestStatuses.Created)
+					.ToListAsync();
 
-                // Retrieve supply requests approved by the current user
-                _logger.LogInformation("Get requests approved by Manager with id: {id}", userId);
-                requests = await _context.SupplyRequests
-                    .Include(r => r.CreatedBy)
-                    .Include(r => r.ApprovedBy)
-                    .Include(r => r.DeliveredBy)
-                    .Where(r => r.ApprovedBy != null && r.ApprovedBy.Id == userId)
-                    .ToListAsync();
-
-                // Return the view with the populated list of supply requests
-                return View(requests);
+				// Return the view with the populated list of supply requests
+				return View(requests);
             }
             catch (Exception ex)
             {
@@ -604,8 +622,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 
                 // Handle the exception gracefully, perhaps redirecting to an error page
                 // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+                 return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the manager requests. {meesage}", ex.Message)));
+			}
         }
 
         // GET: SupplyRequestControlller/ResolveClaims/5
@@ -619,8 +637,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the id is null or the supply requests context is null
                     _logger.LogError("Id is null or SupplyRequests context is null.");
-                    return NotFound();
-                }
+					throw new ArgumentNullException(nameof(id));
+				}
 
                 // Log information about attempting to resolve claims for a specific request
                 _logger.LogInformation("Attempting to resolve claims for SupplyRequest with ID: {Id}.", id);
@@ -637,8 +655,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the request is null
                     _logger.LogError("Supply request with ID {Id} not found.", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Populate the item ids list
                 request.RequestItems.ToList().ForEach(i => itemsIds.Add(i.Id));
@@ -677,10 +695,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the claims resolution request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the claims resolution request. {meesage}", ex.Message)));
+			}
         }
 
         // POST: SupplyRequestControlller/ResolveClaims/5
@@ -696,8 +714,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the ids do not match
                     _logger.LogError("ID in the model does not match the supplied ID.");
-                    return NotFound();
-                }
+					throw new ArgumentException("Incorrect request id.");
+				}
 
                 // Check if the model's status is a valid claims resolution status
                 if (model.Status != SupplyRequestStatuses.MoneyRetured
@@ -705,8 +723,9 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the status is not valid
                     _logger.LogError("Invalid status for claims resolution: {Status}.", model.Status);
-                    return BadRequest();
-                }
+                    throw new InvalidDataException("Invalid status 'Status' provided for claims resolution.");
+
+				}
 
                 // Retrieve the supply request from the database
                 var request = await _context.SupplyRequests.FirstOrDefaultAsync(x => x.Id == model.Id);
@@ -716,8 +735,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the request is null
                     _logger.LogError("Supply request with ID {Id} not found.", model.Id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Update the status of the supply request
                 request.Status = model.Status;
@@ -737,17 +756,17 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 _logger.LogInformation("Claims resolved successfully for supply request with ID: {Id}.", model.Id);
 
                 // Redirect to the manager requests page
-                return RedirectToAction(nameof(ManagerRequests));
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while resolving claims for supply request with ID: {Id}.", model.Id);
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while resolving claims for supply request with ID. {meesage}", ex.Message)));
+			}
         }
 
 
@@ -763,7 +782,7 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("SupplyRequests context is null.");
-                    return Problem("Entity set 'Application_contextContext.SupplyRequests' is null");
+                    throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
                 }
 
                 // Retrieve supply requests that are ready for delivery and have not been assigned to a courier
@@ -783,10 +802,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while retrieving supply requests for delivery.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving supply requests for delivery. {meesage}", ex.Message)));
+			}
         }
 
         // GET: SupplyRequestControlller/Deliver/5
@@ -800,8 +819,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the id is null or if the supply requests context is null
                     _logger.LogError("ID or SupplyRequests context is null.");
-                    return NotFound();
-                }
+					throw new ArgumentNullException(nameof(id));
+				}
 
                 // Initialize a new instance of SupplyRequestViewModel
                 SupplyRequestViewModel model = new SupplyRequestViewModel();
@@ -815,8 +834,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the request is null
                     _logger.LogError("Supply request with ID {Id} not found.", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Populate the itemsIds list with the IDs of the request items
                 request.RequestItems.ToList().ForEach(i => itemsIds.Add(i.Id));
@@ -855,10 +874,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the delivery request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the delivery request. {meesage}", ex.Message)));
+			}
         }
 
         // POST: SupplyRequestControlller/Deliver/5
@@ -874,30 +893,31 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if ids do not match
                     _logger.LogError("Supplied id does not match model id. Supplied id: {Id}, Model id: {ModelId}", id, model.Id);
-                    return NotFound();
-                }
+					throw new ArgumentException("Incorrect request id.");
+				}
 
                 // Check if the model status is valid for delivery
                 if (model.Status != SupplyRequestStatuses.PendingDelivery)
                 {
                     // Log an error if the model status is invalid
                     _logger.LogError("Invalid status for delivery: {Status}", model.Status);
-                    return BadRequest();
-                }
+                    throw new InvalidDataException("Invalid status 'Status' provided for delivery.");
+
+				}
 
                 // Find the supply request by id
-                var request = await _context.SupplyRequests.FirstOrDefaultAsync(x => x.Id == model.Id).ConfigureAwait(false);
+                var request = await _context.SupplyRequests.Include(r => r.CreatedBy).FirstOrDefaultAsync(x => x.Id == model.Id).ConfigureAwait(false);
 
                 // Check if the request is not found
                 if (request == null)
                 {
                     // Log an error if the request is not found
                     _logger.LogError("Supply request not found for id: {Id}", model.Id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Get the current user and user id
-                var (userId, foundUser) = await GetUserAsync().ConfigureAwait(false);
+                var (userId, foundUser) = await _userHelper.GetCurrentUserAsync(User).ConfigureAwait(false);
 
                 // Update the delivery details
                 request.DeliveredBy = foundUser;
@@ -907,6 +927,12 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Update the supply request in the database
                 _context.SupplyRequests.Update(request);
                 await _context.SaveChangesAsync().ConfigureAwait(false);
+
+                if (model.Status == SupplyRequestStatuses.PendingDelivery)
+                {
+                    // Send approved notification to the user
+                    await _hubContext.Clients.User(request.CreatedBy.Id).SendAsync("ReceiveNotification", "Your request has been picked up for delivery.");
+                }
 
                 // Log successful delivery
                 _logger.LogInformation("Supply request with id {Id} delivered successfully.", id);
@@ -918,10 +944,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while delivering supply request with id: {Id}", id);
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while delivering supply request with id. {meesage}", ex.Message)));
+			}
         }
 
         // GET: SupplyRequestControlller/Delivered/5
@@ -935,8 +961,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the id is null or supply requests context is null
                     _logger.LogError("Id is null or SupplyRequests context is null.");
-                    return NotFound();
-                }
+					throw new ArgumentNullException(nameof(id));
+				}
 
                 // Initialize a new SupplyRequestViewModel and a list to store item ids
                 SupplyRequestViewModel model = new SupplyRequestViewModel();
@@ -950,8 +976,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the request is null
                     _logger.LogError("Supply request not found for id: {Id}", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Populate item ids for the supply request
                 request.RequestItems.ToList().ForEach(i => itemsIds.Add(i.Id));
@@ -987,12 +1013,12 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
             catch (Exception ex)
             {
                 // Log any exceptions that occur
-                _logger.LogError(ex, "An error occurred while processing the delivery request.");
+                _logger.LogError(ex, "An error occurred while displaying the delivery page of the request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the delivery page of the request. {meesage}", ex.Message)));
+			}
         }
 
         // POST: SupplyRequestControlller/Delivered/5
@@ -1008,8 +1034,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the ids do not match
                     _logger.LogError("Id in model does not match the id parameter.");
-                    return NotFound();
-                }
+					throw new ArgumentException("Incorrect request id.");
+				}
 
                 // Check if the status in the model is valid for delivery
                 if (model.Status != SupplyRequestStatuses.Delivered
@@ -1017,19 +1043,20 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the status is not valid for delivery
                     _logger.LogError("Invalid status for delivery: {Status}", model.Status);
-                    return BadRequest();
-                }
+                    throw new InvalidDataException("Invalid status 'Status' provided for delivery.");
+
+				}
 
                 // Find the supply request by id
-                var request = await _context.SupplyRequests.FirstOrDefaultAsync(x => x.Id == model.Id);
+                var request = await _context.SupplyRequests.Include(r => r.CreatedBy).FirstOrDefaultAsync(x => x.Id == model.Id);
 
                 // Check if the request is null
                 if (request == null)
                 {
                     // Log an error if the request is not found
                     _logger.LogError("Supply request not found for id: {Id}", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 // Update the status and additional details of the supply request
                 request.Status = model.Status;
@@ -1046,6 +1073,17 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 _context.SupplyRequests.Update(request);
                 await _context.SaveChangesAsync();
 
+                if (model.Status == SupplyRequestStatuses.Delivered)
+                {
+                    // Send approved notification to the user
+                    await _hubContext.Clients.User(request.CreatedBy.Id).SendAsync("ReceiveNotification", "Your request has been delivered.");
+                }
+                else
+                {
+                    // Send rejected notification to the user
+                    await _hubContext.Clients.User(request.CreatedBy.Id).SendAsync("ReceiveNotification", "Your request has been delivered with claims.");
+                }
+
                 // Log information about successful delivery
                 _logger.LogInformation("Supply request {Id} delivered successfully.", id);
 
@@ -1054,16 +1092,16 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
             catch (Exception ex)
             {
                 // Log any exceptions that occur
-                _logger.LogError(ex, "An error occurred while processing the delivery request.");
+                _logger.LogError(ex, "An error occurred while processing the delivery status of the request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the delivery status of the request. {meesage}", ex.Message)));
+			}
         }
 
         // GET: SupplyRequestControlller/Delete/5
-        [Authorize(Policy = "User")]
+        [Authorize(Roles = "User,Manager")]
         public async Task<IActionResult> Delete(int? id)
         {
             try
@@ -1073,8 +1111,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the id is null or if the supply requests context is null
                     _logger.LogError("Id is null or SupplyRequests context is null.");
-                    return NotFound();
-                }
+					throw new ArgumentNullException(nameof(id));
+				}
 
                 // Retrieve the supply request including related entities
                 var request = await _context.SupplyRequests
@@ -1102,8 +1140,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the request is null
                     _logger.LogError("Supply request not found for id: {Id}", id);
-                    return NotFound();
-                }
+					throw new KeyNotFoundException(String.Format("Supply request not found with id: {id}", id));
+				}
 
                 return View(request);
             }
@@ -1112,16 +1150,16 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the delete request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the delete request. {meesage}", ex.Message)));
+			}
         }
 
         // POST: SupplyRequestControlller/Delete/5
         [HttpPost, ActionName("Delete")]
 		[ValidateAntiForgeryToken]
-		[Authorize(Policy = "User")]
+        [Authorize(Roles = "User,Manager")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
@@ -1134,8 +1172,8 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("SupplyRequests context is null.");
-                    return Problem("Entity set 'Application_contextContext.SupplyRequests' is null.");
-                }
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
+				}
 
                 // Retrieve the supply request including related entities
                 var request = await _context.SupplyRequests.Include(r => r.RequestItems).FirstOrDefaultAsync(r => r.Id == id);
@@ -1168,42 +1206,10 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 // Log any exceptions that occur
                 _logger.LogError(ex, "An error occurred while processing the delete confirmed request.");
 
-                // Handle the exception gracefully, perhaps redirecting to an error page
-                // or displaying a friendly error message to the user
-                return RedirectToAction("Error", "Home");
-            }
-        }
-
-        private async Task<(string, User)> GetUserAsync()
-        {
-            // Get the current user
-            var currentUser = User;
-
-            // Check if the current user is null
-            if (currentUser == null)
-            {
-                // Log an error if the current user is null
-                this._logger.LogError("Current user is null.");
-                // Redirect to an error page or return an appropriate response
-                throw new Exception("Current user is null.");
-            }
-
-            // Get the user id
-            var userId = _userManager.GetUserId(currentUser);
-
-            // Check if the user id is null or empty
-            if (string.IsNullOrEmpty(userId))
-            {
-                // Log an error if the user id is null or empty
-                _logger.LogError("User id is null or empty.");
-                // Redirect to an error page or return an appropriate response
-                throw new Exception("User id is null or empty.");
-            }
-
-            // Find the user by user id
-            var foundUser = await _userManager.FindByIdAsync(userId) as User;
-
-            return (userId, foundUser);
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the delete confirmed request. {meesage}", ex.Message)));
+			}
         }
     }
 }

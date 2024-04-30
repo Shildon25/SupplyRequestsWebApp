@@ -1,10 +1,10 @@
-
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using SupplyManagement.Models;
+using SupplyManagement.Models.Enums;
+using SupplyManagement.Services;
 using SupplyManagement.WebApp.Data;
-using SupplyManagement.WebApp.Models;
-using SupplyManagement.WebApp.Models.Enums;
 
 public class Program
 {
@@ -12,11 +12,36 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+        // Configure Serilog logging
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console() // Log to console
+            .WriteTo.File($"C:\\Users\\{Environment.UserName}\\Desktop\\log.txt", rollingInterval: RollingInterval.Day) // Log to file on desktop
+            .CreateLogger();
+
+        builder.Logging.ClearProviders();
+        builder.Logging.AddSerilog();
+
+        builder.Services.AddSignalR();
+
+		// Add services to the container.
+		var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowLocalhost",
+                builder =>
+                {
+                    builder.WithOrigins("http://localhost:44306"
+                        ,"http://localhost:14384"
+                        ,"http://localhost:5290"
+                        ,"https://localhost:7014") // Replace "port" with the port number your application is running on
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                });
+        });
 
         builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
             .AddRoles<IdentityRole>()
@@ -49,6 +74,7 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseCors("AllowLocalhost");
         app.UseStaticFiles();
 
         app.UseRouting();
@@ -63,7 +89,9 @@ public class Program
                 name: "default",
                 pattern: "{area=Login}/{controller=Home}/{action=Index}/{id?}"
             );
-        });
+
+            endpoints.MapHub<NotificationHub>("/notificationHub");
+		});
 
         // Create Roles
         using (var scope = app.Services.CreateScope())

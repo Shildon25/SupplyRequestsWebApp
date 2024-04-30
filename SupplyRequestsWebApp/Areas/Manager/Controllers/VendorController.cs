@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.WebApp.Data;
-using SupplyManagement.WebApp.Models;
+using SupplyManagement.Models;
+using SupplyManagement.Helpers;
+using SupplyManagement.Models.ViewModels;
+using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 {
@@ -15,12 +18,14 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<VendorController> _logger;
+        private readonly UserHelper _userHelper;
 
         public VendorController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<VendorController>? logger)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _userHelper = new UserHelper(userManager, logger);
         }
 
 		// GET: Vendors
@@ -35,7 +40,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Entity set 'ApplicationDbContext.Vendors' is null");
 					// Return a Problem response
-					return Problem("Entity set 'ApplicationDbContext.Vendors' is null");
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Vendors' is null");
 				}
 
 				// Retrieve all vendors including their creators
@@ -50,8 +55,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving vendors");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendors. {meesage}", ex.Message)));
 			}
 		}
 
@@ -66,7 +73,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Id is null or DbSet 'Vendors' is null");
 					// Return NotFound result
-					return NotFound();
+					throw new ArgumentNullException(nameof(id));
 				}
 
 				// Find the vendor with the provided id including its creator
@@ -77,7 +84,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If vendor is not found, return NotFound result
 				if (vendor == null)
 				{
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
 				}
 
 				// Return the view with vendor details
@@ -87,8 +94,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving vendor details for id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while vendor details. {meesage}", ex.Message)));
 			}
 		}
 
@@ -105,8 +114,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while loading the Create page");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while loading the Create page. {meesage}", ex.Message)));
 			}
 		}
 
@@ -127,18 +138,8 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 						return View(vendor);
 					}
 
-					// Get the current authenticated user
-					var currentUser = User;
-					var userId = _userManager.GetUserId(currentUser);
-
-					// Find the user in the database
-					var foundUser = await _userManager.FindByIdAsync(userId);
-
-					// If user is not found, return NotFound
-					if (foundUser == null)
-					{
-						return NotFound("Current authenticated user not found to create a new vendor");
-					}
+                    // Get the current user and user id
+                    var (userId, foundUser) = await _userHelper.GetCurrentUserAsync(User).ConfigureAwait(false);
 
 					// Set the CreatedBy and CreatedByUserId properties of the vendor
 					vendor.CreatedBy = (User)foundUser;
@@ -158,8 +159,11 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while creating a new vendor");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating a new vendor. {meesage}", ex.Message)));
+
 			}
 		}
 
@@ -174,7 +178,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Id is null or DbSet 'Vendors' is null");
 					// Return NotFound result
-					return NotFound();
+					throw new ArgumentNullException(nameof(id));
 				}
 
 				// Find the vendor with the provided id including its creator
@@ -185,7 +189,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If vendor is not found, return NotFound result
 				if (vendor == null)
 				{
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
 				}
 
 				// Return the view with the vendor details
@@ -195,8 +199,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving vendor details for edit with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendor details. {meesage}", ex.Message)));
 			}
 		}
 
@@ -210,7 +216,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// Check if id matches the vendor id
 				if (id != vendor.Id)
 				{
-					return NotFound();
+					throw new ArgumentException("Incorrect vendor id.");
 				}
 
 				// Check if Name field is valid
@@ -229,7 +235,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// If vendor is not found, return NotFound
 					if (foundVendor == null)
 					{
-						return NotFound("Vendor was not found to update");
+						throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
 					}
 
 					// Update the vendor name
@@ -246,7 +252,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 						// Check if the vendor still exists
 						if (!VendorExists(vendor.Id))
 						{
-							return NotFound();
+							throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
 						}
 						else
 						{
@@ -265,8 +271,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while updating vendor with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while updating vendor. {meesage}", ex.Message)));
 			}
 		}
 
@@ -281,7 +289,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Id is null or DbSet 'Vendors' is null");
 					// Return NotFound result
-					return NotFound();
+					throw new ArgumentNullException(nameof(id));
 				}
 
 				// Find the vendor with the provided id including its creator
@@ -292,7 +300,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If vendor is not found, return NotFound result
 				if (vendor == null)
 				{
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
 				}
 
 				// Return the view with the vendor details
@@ -302,8 +310,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving vendor details for deletion with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendor details for deletion. {meesage}", ex.Message)));
 			}
 		}
 
@@ -320,7 +330,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Vendors DbSet is null");
 					// Return a Problem result
-					return Problem("Entity set 'ApplicationDbContext.Vendors' is null.");
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Vendors' is null");
 				}
 
 				// Find the vendor with the provided id
@@ -342,9 +352,12 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while deleting vendor with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
-			}
+
+                // Handle the exception gracefully, perhaps redirecting to an error page
+                // or displaying a friendly error message to the user
+                return View("Error", new ErrorViewModel("Vendor already used in some of the suply requests. " +
+					"Firstly, delete all supply requests and items related to this vendor."));
+            }
 		}
 
 		// Check whether Vendor exists or not.

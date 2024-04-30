@@ -9,8 +9,8 @@
         public string Name { get; set; }
         [Required]
         [Display(Name = "Created By")]
-        public int CreatedByUserId { get; set; }
-        [ForeignKey("UserId")]
+        public string CreatedByUserId { get; set; }
+        [ForeignKey("CreatedByUserId")]
         public User CreatedBy { get; set; }
     }
 }

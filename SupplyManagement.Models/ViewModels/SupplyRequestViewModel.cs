@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using SupplyManagement.WebApp.Models.Enums;
+using SupplyManagement.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace SupplyManagement.WebApp.Models.ViewModels
+namespace SupplyManagement.Models.ViewModels
 {
 	public class SupplyRequestViewModel
 	{

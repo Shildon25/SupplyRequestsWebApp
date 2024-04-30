@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.WebApp.Data;
-using SupplyManagement.WebApp.Models;
-using SupplyManagement.WebApp.Models.Enums;
-using SupplyManagement.WebApp.Models.ViewModels;
+using SupplyManagement.Models;
+using SupplyManagement.Models.Enums;
+using SupplyManagement.Models.ViewModels;
+using System.Data.Common;
+using System.Data.SqlTypes;
+using Microsoft.Data.SqlClient;
 
 namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 {
@@ -39,7 +42,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					// Log the error
 					_logger.LogError("Entity set 'ApplicationDbContext.Users' is null");
 					// Return a problem response
-					return Problem("Entity set 'ApplicationDbContext.Users' is null");
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
 				}
 
 				// Retrieve all users in the 'Manager' role
@@ -70,9 +73,11 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving managers");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
-			}
+
+                // Handle the exception gracefully, perhaps redirecting to an error page
+                // or displaying a friendly error message to the user
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving managers. {meesage}", ex.Message)));
+            }
 		}
 
 
@@ -88,7 +93,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					// Log the error
 					_logger.LogError("User id is null or DbSet 'Users' is null");
 					// Return a not found response
-					return NotFound();
+					throw new ArgumentNullException(nameof(id));
 				}
 
 				// Retrieve the manager with the specified id
@@ -100,7 +105,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					// Log the error
 					_logger.LogError("Manager not found with id: {id}", id);
 					// Return a not found response
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Manager not found with id: {id}", id));
 				}
 
 				// Create a RegisterViewModel to display manager details
@@ -125,8 +130,10 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving manager details for id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+                // Handle the exception gracefully, perhaps redirecting to an error page
+                // or displaying a friendly error message to the user
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving manager details. {meesage}", ex.Message)));
 			}
 		}
 
@@ -147,8 +154,10 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while loading create manager page");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while loading create manager page. {meesage}", ex.Message)));
 			}
 		}
 
@@ -232,8 +241,10 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while creating a manager");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating a manager. {meesage}", ex.Message)));
 			}
 		}
 
@@ -249,7 +260,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					// Log the error
 					_logger.LogError("Id is null or Users DbSet is null");
 					// Return NotFound result
-					return NotFound();
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
 				}
 
 				// Find the manager with the provided id
@@ -258,7 +269,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 				// If manager is not found, return NotFound result
 				if (manager == null)
 				{
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Manager not found with id: {id}", id));
 				}
 
 				// Create a view model for the manager
@@ -280,8 +291,10 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while deleting a manager");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while deleting a manager. {meesage}", ex.Message)));
 			}
 		}
 
@@ -298,7 +311,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					// Log the error
 					_logger.LogError("Users DbSet is null");
 					// Return a Problem result
-					return Problem("Entity set 'ApplicationDbContext.Managers' is null.");
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
 				}
 
 				// Find the user with the provided id
@@ -323,9 +336,12 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while deleting a manager");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
-			}
+
+                // Handle the exception gracefully, perhaps redirecting to an error page
+                // or displaying a friendly error message to the user
+                return View("Error", new ErrorViewModel("Manager already used in some of the supply requests. " +
+                                    "Firstly, delete all supply requests and items related to this Manager."));
+            }
 		}
 	}
 }

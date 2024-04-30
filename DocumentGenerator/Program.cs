@@ -1,4 +1,4 @@
-﻿using SupplyManagement.WebApp.Models.Enums;
+﻿using SupplyManagement.Models.Enums;
 using System.Data;
 using System.Data.SqlClient;
 

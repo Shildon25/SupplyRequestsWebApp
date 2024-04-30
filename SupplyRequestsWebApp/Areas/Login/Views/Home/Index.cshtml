@@ -1,8 +1,19 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    var userName = User.Identity.IsAuthenticated ? User.Identity.Name : "User";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <div class="text-center">
+        <h1 class="display-4">Welcome, @userName!</h1>
+        <p>This service is designed to help you create supply requests with provided items and vendors, and track these requests from creation to delivery.</p>
+        @if (User.Identity.IsAuthenticated)
+        {
+            <p>You are currently logged in as: <strong>@userName</strong></p>
+        }
+        else
+        {
+            <p>Please <a class="text-dark" asp-area="Login" asp-controller="Account" asp-action="Login">Login</a> to access the full functionality of the application.</p>
+        }
+    </div>
 </div>

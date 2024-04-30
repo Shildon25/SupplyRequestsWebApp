@@ -4,8 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.WebApp.Data;
-using SupplyManagement.WebApp.Models.Enums;
-using SupplyManagement.WebApp.Models.ViewModels;
+using SupplyManagement.Models.Enums;
+using SupplyManagement.Models.ViewModels;
+using System.Data.SqlTypes;
+using Microsoft.AspNetCore.SignalR;
+using SupplyManagement.Models;
+using SupplyManagement.Services;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 {
@@ -37,7 +41,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (_context.Users == null)
 				{
 					_logger.LogError("Entity set 'ApplicationDbContext.Users' is null");
-					return Problem("Entity set 'ApplicationDbContext.Users' is null");
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
 				}
 
 				// Retrieve users with Created account status
@@ -64,7 +68,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Logging error
 				_logger.LogError(ex, "An error occurred while retrieving account approval requests.");
-				return Problem("An error occurred while retrieving account approval requests.", statusCode: 500);
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving account approval requests. {meesage}", ex.Message)));
 			}
 		}
 
@@ -81,7 +88,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (id == null || _context.Users == null)
 				{
 					_logger.LogError("ID or Users context is null");
-					return NotFound();
+					throw new ArgumentException(nameof(id));
 				}
 
 				// Retrieve user by ID
@@ -91,7 +98,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (user == null)
 				{
 					_logger.LogError($"User with ID '{id}' not found.");
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("User not found with id: {id}", id));
 				}
 
 				// Create view model for editing
@@ -121,7 +128,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Logging error
 				_logger.LogError(ex, "An error occurred while editing the account.");
-				return Problem("An error occurred while editing the account.", statusCode: 500);
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while editing the account. {meesage}", ex.Message)));
 			}
 		}
 
@@ -139,7 +149,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (id != approveAccountViewModel.Id)
 				{
 					_logger.LogError($"ID mismatch: Provided ID: {id}, ViewModel ID: {approveAccountViewModel.Id}");
-					return NotFound();
+					throw new ArgumentException("Incorrect request id.");
 				}
 
 				// Retrieve user by ID
@@ -149,7 +159,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (user == null)
 				{
 					_logger.LogError($"User with ID '{id}' not found.");
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("User not found with id: {id}", id));
 				}
 
 				// Update account status
@@ -160,7 +170,8 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					await _context.SaveChangesAsync();
 					// Logging information
 					_logger.LogInformation($"Account with ID: {id} updated successfully.");
-					return RedirectToAction(nameof(Index));
+
+                    return RedirectToAction(nameof(Index));
 				}
 
 				// Retrieve account statuses for dropdown
@@ -175,7 +186,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Logging error
 				_logger.LogError(ex, "An error occurred while updating the account.");
-				return Problem("An error occurred while updating the account.", statusCode: 500);
+
+                // Handle the exception gracefully, perhaps redirecting to an error page
+                // or displaying a friendly error message to the user
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while updating the account. {meesage}", ex.Message)));
 			}
 		}
 

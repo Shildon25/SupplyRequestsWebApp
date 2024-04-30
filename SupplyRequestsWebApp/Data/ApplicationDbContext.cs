@@ -1,11 +1,8 @@
 ﻿namespace SupplyManagement.WebApp.Data
 {
-    using Microsoft.AspNetCore.Identity;
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.Extensions.Hosting;
-    using SupplyManagement.WebApp.Models;
-    using System.Security.Principal;
+    using SupplyManagement.Models;
 
     public class ApplicationDbContext : IdentityDbContext
     {

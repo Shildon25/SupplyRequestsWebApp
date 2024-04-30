@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SupplyManagement.WebApp.Models
+namespace SupplyManagement.Models
 {
     public class ItemSupplyRequest
     {

@@ -1,4 +1,4 @@
-﻿namespace SupplyManagement.WebApp.Models.ViewModels
+﻿namespace SupplyManagement.Models.ViewModels
 {
     using System.ComponentModel.DataAnnotations;
 

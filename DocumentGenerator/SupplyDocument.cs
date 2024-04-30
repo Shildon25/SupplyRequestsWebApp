@@ -1,4 +1,4 @@
-﻿using SupplyManagement.WebApp.Models;
+﻿using SupplyManagement.Models;
 
 namespace SupplyManagement.DocumentGeneratorApp
 {

@@ -251,7 +251,7 @@ namespace SupplyManagement.WebApp.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.Item", b =>
+            modelBuilder.Entity("SupplyManagement.Models.Item", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -279,7 +279,7 @@ namespace SupplyManagement.WebApp.Migrations
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.ItemSupplyRequest", b =>
+            modelBuilder.Entity("SupplyManagement.Models.ItemSupplyRequest", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -302,7 +302,7 @@ namespace SupplyManagement.WebApp.Migrations
                     b.ToTable("ItemSupplyRequests");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>
+            modelBuilder.Entity("SupplyManagement.Models.SupplyRequest", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -343,7 +343,7 @@ namespace SupplyManagement.WebApp.Migrations
                     b.ToTable("SupplyRequests");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.Vendor", b =>
+            modelBuilder.Entity("SupplyManagement.Models.Vendor", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -366,7 +366,7 @@ namespace SupplyManagement.WebApp.Migrations
                     b.ToTable("Vendors");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.User", b =>
+            modelBuilder.Entity("SupplyManagement.Models.User", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
@@ -388,13 +388,13 @@ namespace SupplyManagement.WebApp.Migrations
 
             modelBuilder.Entity("ItemSupplyRequest", b =>
                 {
-                    b.HasOne("SupplyManagement.WebApp.Models.Item", null)
+                    b.HasOne("SupplyManagement.Models.Item", null)
                         .WithMany()
                         .HasForeignKey("ItemsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SupplyManagement.WebApp.Models.SupplyRequest", null)
+                    b.HasOne("SupplyManagement.Models.SupplyRequest", null)
                         .WithMany()
                         .HasForeignKey("SupplyRequestsId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -452,15 +452,15 @@ namespace SupplyManagement.WebApp.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.Item", b =>
+            modelBuilder.Entity("SupplyManagement.Models.Item", b =>
                 {
-                    b.HasOne("SupplyManagement.WebApp.Models.User", "CreatedBy")
+                    b.HasOne("SupplyManagement.Models.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SupplyManagement.WebApp.Models.Vendor", "Vendor")
+                    b.HasOne("SupplyManagement.Models.Vendor", "Vendor")
                         .WithMany()
                         .HasForeignKey("VendorId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -471,14 +471,14 @@ namespace SupplyManagement.WebApp.Migrations
                     b.Navigation("Vendor");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.ItemSupplyRequest", b =>
+            modelBuilder.Entity("SupplyManagement.Models.ItemSupplyRequest", b =>
                 {
-                    b.HasOne("SupplyManagement.WebApp.Models.Item", "Item")
+                    b.HasOne("SupplyManagement.Models.Item", "Item")
                         .WithMany("RequestItems")
                         .HasForeignKey("ItemId")
                         .IsRequired();
 
-                    b.HasOne("SupplyManagement.WebApp.Models.SupplyRequest", "SupplyRequest")
+                    b.HasOne("SupplyManagement.Models.SupplyRequest", "SupplyRequest")
                         .WithMany("RequestItems")
                         .HasForeignKey("SupplyRequestId")
                         .IsRequired();
@@ -488,19 +488,19 @@ namespace SupplyManagement.WebApp.Migrations
                     b.Navigation("SupplyRequest");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>
+            modelBuilder.Entity("SupplyManagement.Models.SupplyRequest", b =>
                 {
-                    b.HasOne("SupplyManagement.WebApp.Models.User", "ApprovedBy")
+                    b.HasOne("SupplyManagement.Models.User", "ApprovedBy")
                         .WithMany()
                         .HasForeignKey("ApprovedByUserId");
 
-                    b.HasOne("SupplyManagement.WebApp.Models.User", "CreatedBy")
+                    b.HasOne("SupplyManagement.Models.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SupplyManagement.WebApp.Models.User", "DeliveredBy")
+                    b.HasOne("SupplyManagement.Models.User", "DeliveredBy")
                         .WithMany()
                         .HasForeignKey("DeliveredByUserId");
 
@@ -511,9 +511,9 @@ namespace SupplyManagement.WebApp.Migrations
                     b.Navigation("DeliveredBy");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.Vendor", b =>
+            modelBuilder.Entity("SupplyManagement.Models.Vendor", b =>
                 {
-                    b.HasOne("SupplyManagement.WebApp.Models.User", "CreatedBy")
+                    b.HasOne("SupplyManagement.Models.User", "CreatedBy")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -522,12 +522,12 @@ namespace SupplyManagement.WebApp.Migrations
                     b.Navigation("CreatedBy");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.Item", b =>
+            modelBuilder.Entity("SupplyManagement.Models.Item", b =>
                 {
                     b.Navigation("RequestItems");
                 });
 
-            modelBuilder.Entity("SupplyManagement.WebApp.Models.SupplyRequest", b =>
+            modelBuilder.Entity("SupplyManagement.Models.SupplyRequest", b =>
                 {
                     b.Navigation("RequestItems");
                 });

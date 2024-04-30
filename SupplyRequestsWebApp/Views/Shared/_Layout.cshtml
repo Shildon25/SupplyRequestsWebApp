@@ -14,7 +14,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="Login" asp-controller="Home" asp-action="Index">SupplyManagement.WebApp</a>
+                <a class="navbar-brand" asp-area="Login" asp-controller="Home" asp-action="Index">Supply Management App</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -22,19 +22,9 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <ul class="navbar-nav flex-grow-1">
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Home" asp-action="Index">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Account" asp-action="ChangePassword">Change Password</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Account" asp-action="Logout">Logout</a>
-                            </li>
+                        <ul class="navbar-nav">
+                            <!-- Left-aligned navigation items -->
+                            <!-- Add other navigation items here -->
                             @if (User.IsInRole("Admin"))
                             {
                                 <li class="nav-item">
@@ -56,13 +46,30 @@
                                     <a class="nav-link text-dark" asp-area="Customer" asp-controller="SupplyRequest" asp-action="Index">My Supply Requests</a>
                                 </li>
                             }
-                            @if (User.IsInRole("User") || User.IsInRole("Courier"))
+                            else if (User.IsInRole("User") || User.IsInRole("Courier"))
                             {
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="Customer" asp-controller="SupplyRequest" asp-action="Index">My Supply Requests</a>
                                 </li>
                             }
                         </ul>
+
+                        <ul class="navbar-nav ml-auto">
+                            <!-- Right-aligned navigation items -->
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Home" asp-action="Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Account" asp-action="ChangePassword">Change Password</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="Login" asp-controller="Account" asp-action="Logout">Logout</a>
+                            </li>
+                        </ul>
+
                     }
                     else
                     {
@@ -79,6 +86,10 @@
             </div>
         </nav>
     </header>
+    <div class="container mt-5">
+        <div id="notificationSuccess" class="alert alert-success" style="display: none;"></div>
+        <div id="notificationFail" class="alert alert-danger" style="display: none;"></div>
+    </div>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -94,6 +105,32 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap-multiselect.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- SignalR script -->
+    <script src="/notificationHub"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.2/signalr.min.js"></script>
+
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub")
+            .build();
+
+        connection.on("ReceiveNotification", (message) => {
+            if (message.toLowerCase().includes("rejected")
+                || message.toLowerCase().includes("claims")) {
+                $('#notificationFail').html(message).show();
+                $('#notificationSuccess').hide();
+            } else {
+                $('#notificationSuccess').html(message).show();
+                $('#notificationFail').hide();
+            }
+        });
+
+
+        connection.start()
+            .then(() => console.log("SignalR connection established."))
+            .catch((err) => console.error(err));
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

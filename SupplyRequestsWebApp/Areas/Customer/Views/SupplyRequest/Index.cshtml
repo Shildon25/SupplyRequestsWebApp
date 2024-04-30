@@ -1,4 +1,4 @@
-﻿@model IEnumerable<SupplyManagement.WebApp.Models.SupplyRequest>;
+﻿@model IEnumerable<SupplyManagement.Models.SupplyRequest>;
 
 @{
     ViewData["Title"] = "Supply Requests";
@@ -8,11 +8,11 @@
 	<div class="col-6">
 		<h2 class="text-info">My Supply Requests List</h2>
 	</div>
-	@if (User.IsInRole("User"))
+	@if (User.IsInRole("Manager"))
 	{
-		<div class="col-6 align-self-center">
-			<a asp-action="Create" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; New Supply Requests</a>
-		</div>
+	<div class="col-6 align-self-center">
+			<a asp-action="ManagerRequestsToApprove" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Supply Requests To Approve</a>
+	</div>
 	}
 	else if (User.IsInRole("Courier"))
 	{
@@ -20,10 +20,10 @@
 			<a asp-action="RequestsToDeliver" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; Deliver New Supply Requests</a>
 		</div>
 	}
-	else if (User.IsInRole("Manager"))
+	else if (User.IsInRole("User"))
 	{
 		<div class="col-6 align-self-center">
-			<a asp-action="ManagerRequests" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; My Supply Requests</a>
+			<a asp-action="Create" class="btn btn-info float-end"><i class="fa fa-plus" aria-hidden="true"></i>&nbsp; New Supply Requests</a>
 		</div>
 	}
 </div>
@@ -67,8 +67,12 @@
 					{
 						<td class="d-flex flex-row-reverse">
 							<div class="btn-group">
-								<a asp-action="Approve" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+								@if (@request.Status.ToString() == "ClaimsDocumentGenerated")
+								{
+									<a asp-action="ResolveClaims" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+								}
 								<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+								<a asp-action="Delete" class="btn btn-danger" asp-route-id="@request.Id"><i class="fa fa-trash" aria-hidden="true"></i></a>
 							</div>
 						</td>
 					}

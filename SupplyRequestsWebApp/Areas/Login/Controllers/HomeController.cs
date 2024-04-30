@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SupplyManagement.WebApp.Models.ViewModels;
+using SupplyManagement.Models.ViewModels;
 using System.Diagnostics;
 
 namespace SupplyManagement.WebApp.Areas.Login.Controllers
@@ -16,21 +16,51 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
             _logger = logger;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+		public IActionResult Index()
+		{
+			try
+			{
+				// Display the index page
+				return View();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "An error occurred while displaying the index page.");
+				// Handle the exception gracefully, perhaps return an error view
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the index page. {meesage}", ex.Message)));
+			}
+		}
 
-        [Authorize]
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+		[Authorize]
+		public IActionResult Privacy()
+		{
+			try
+			{
+				// Display the privacy page
+				return View();
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "An error occurred while displaying the privacy page.");
+				// Handle the exception gracefully, perhaps return an error view
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the privacy page. {meesage}", ex.Message)));
+			}
+		}
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-    }
+		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+		public IActionResult Error()
+		{
+			try
+			{
+				// Display the error page with error details
+				return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, "An error occurred while displaying the error page.");
+				// Handle the exception gracefully, perhaps return an error view
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the error page. {meesage}", ex.Message)));
+			}
+		}
+	}
 }

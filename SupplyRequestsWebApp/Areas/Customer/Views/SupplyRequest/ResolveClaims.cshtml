@@ -1,4 +1,4 @@
-﻿@model SupplyManagement.WebApp.Models.ViewModels.SupplyRequestViewModel
+﻿@model SupplyManagement.Models.ViewModels.SupplyRequestViewModel
 
 @{
 	ViewData["Title"] = "Resolve Claims of the Supply Request";
@@ -6,6 +6,7 @@
 <br />
 <h2 class="text-info">Resolve Claims of the Supply Request</h2>
 <form asp-action="ResolveClaims" method="post" enctype="multipart/form-data">
+	@Html.AntiForgeryToken()
 	<div class="p-4 rounded border container row">
 		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 		<div class="col-8">
@@ -48,7 +49,7 @@
 			</div>
 			<div class="form-group my-3">
 				<input type="submit" class="btn btn-primary" value="Save" />
-				<a asp-action="ManagerRequests" class="btn btn-success">Back to List</a>
+				<a asp-action="ManagerRequestsToApprove" class="btn btn-success">Back to List</a>
 			</div>
 		</div>
 	</div>

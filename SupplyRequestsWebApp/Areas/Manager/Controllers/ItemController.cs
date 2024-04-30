@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.WebApp.Data;
-using SupplyManagement.WebApp.Models;
+using SupplyManagement.Models;
+using SupplyManagement.Helpers;
+using SupplyManagement.Models.ViewModels;
+using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 {
@@ -16,12 +19,14 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<ItemController> _logger;
+        private readonly UserHelper _userHelper;
 
         public ItemController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ItemController>? logger)
         {
             _context = context;
             _userManager = userManager;
             _logger = logger;
+            _userHelper = new UserHelper(userManager, logger);
         }
 
 		// GET: items
@@ -36,7 +41,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Entity set 'ApplicationDbContext.Items' is null");
 					// Return a problem response
-					return Problem("Entity set 'ApplicationDbContext.Items' is null");
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Items' is null");
 				}
 
 				// Retrieve all items including their associated vendor and creator
@@ -52,8 +57,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving items");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving items. {meesage}", ex.Message)));
 			}
 		}
 
@@ -68,7 +75,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Id is null or DbSet 'Items' is null");
 					// Return NotFound result
-					return NotFound();
+					throw new ArgumentNullException(nameof(id));
 				}
 
 				// Find the item with the provided id including its associated vendor and creator
@@ -80,7 +87,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If item is not found, return NotFound result
 				if (item == null)
 				{
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
 				}
 
 				// Return the view with the item details
@@ -90,8 +97,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving item details for id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details. {meesage}", ex.Message)));
 			}
 		}
 
@@ -108,8 +117,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving vendors for item creation");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying item creation view. {meesage}", ex.Message)));
 			}
 		}
 
@@ -134,18 +145,8 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 						return View(item);
 					}
 
-					// Get the current user's id
-					System.Security.Claims.ClaimsPrincipal currentUser = User;
-					var userId = _userManager.GetUserId(currentUser);
-
-					// Find the current user
-					var foundUser = await _userManager.FindByIdAsync(userId);
-
-					// If the current user is not found, return NotFound
-					if (foundUser == null)
-					{
-						return NotFound("Current authenticated user not found to create a new item");
-					}
+                    // Get the current user and user id
+                    var (userId, foundUser) = await _userHelper.GetCurrentUserAsync(User).ConfigureAwait(false);
 
 					// Assign the current user as the creator of the item
 					item.CreatedBy = (User)foundUser;
@@ -169,8 +170,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while creating a new item");
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating item. {meesage}", ex.Message)));
 			}
 		}
 
@@ -185,7 +188,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Id is null or DbSet 'Items' is null");
 					// Return NotFound result
-					return NotFound();
+					throw new ArgumentNullException(nameof(id));
 				}
 
 				// Find the item with the provided id including its associated vendor and creator
@@ -197,7 +200,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If item is not found, return NotFound result
 				if (item == null)
 				{
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
 				}
 
 				// Populate the dropdown list with vendors
@@ -210,8 +213,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving item details for edit with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details for edit. {meesage}", ex.Message)));
 			}
 		}
 
@@ -228,7 +233,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// Check if id matches item id
 				if (id != item.Id)
 				{
-					return NotFound();
+					throw new ArgumentException("Incorrect item id.");
 				}
 
 				// Check if model state is valid for required fields
@@ -251,7 +256,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// If item is not found, return NotFound
 					if (foundItem == null)
 					{
-						return NotFound("Item was not found to update");
+						throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
 					}
 
 					// Update item properties
@@ -273,8 +278,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while updating item with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while updating item. {meesage}", ex.Message)));
 			}
 		}
 
@@ -289,7 +296,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Id is null or DbSet 'Items' is null");
 					// Return NotFound result
-					return NotFound();
+					throw new ArgumentNullException(nameof(id));
 				}
 
 				// Find the item with the provided id including its associated vendor and creator
@@ -301,7 +308,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If item is not found, return NotFound result
 				if (item == null)
 				{
-					return NotFound();
+					throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
 				}
 
 				// Return the view with the item details
@@ -311,8 +318,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while retrieving item details for deletion with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
+
+				// Handle the exception gracefully, perhaps redirecting to an error page
+				// or displaying a friendly error message to the user
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details for deletion. {meesage}", ex.Message)));
 			}
 		}
 
@@ -329,7 +338,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Entity set 'ApplicationDbContext.Items' is null");
 					// Return a Problem result
-					return Problem("Entity set 'ApplicationDbContext.Items' is null.");
+					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Items' is null");
 				}
 
 				// Find the item with the provided id
@@ -351,9 +360,10 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while deleting item with id: {id}", id);
-				// Return an error view or message
-				return StatusCode(500, "An error occurred while processing your request");
-			}
+
+                return View("Error", new ErrorViewModel("Item already used in some of the suply requests. " +
+                                    "Firstly, delete all supply requests related to this item."));
+            }
 		}
 
 		// Check whether item exists or not
