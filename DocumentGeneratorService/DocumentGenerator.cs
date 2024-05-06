@@ -6,96 +6,79 @@ namespace SupplyManagement.DocumentGeneratorService
 {
     public static class DocumentGenerator
 	{
-        public static void GenerateSupplyDocument(SupplyDocument supplyDocument, string filePath)
+        public static void GenerateSupplyDocument(SupplyDocument supplyDocument, string filePath, string templateFilePath)
         {
-            using (WordprocessingDocument doc = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+            // Load the template document
+            using (WordprocessingDocument templateDoc = WordprocessingDocument.Open(templateFilePath, false))
             {
-                MainDocumentPart mainPart = doc.AddMainDocumentPart();
-                mainPart.Document = new Document();
-                Body body = new Body();
-
-                CreateParagraph(body, String.Format("Request id: {0}", supplyDocument.RequestId.ToString()));
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, String.Format("Request owner: {0};  Signature:", supplyDocument.RequestOwnerName));
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, String.Format("Request manager: {0};  Signature:", supplyDocument.ApprovalManagerName));
-
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, "Items list:");
-
-                foreach (string item in supplyDocument.RequestItems)
+                // Create a new document based on the template
+                using (WordprocessingDocument doc = (WordprocessingDocument)templateDoc.Clone(filePath, true))
                 {
-                    CreateParagraph(body, item);
-                }
+                    // Access the main part of the document
+                    MainDocumentPart mainPart = doc.MainDocumentPart;
 
-                mainPart.Document.Append(body);
+                    // Find and replace placeholders in the document with actual values
+                    ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", supplyDocument.RequestId.ToString());
+                    ReplacePlaceholderWithText(mainPart, "[REQUEST_OWNER]", supplyDocument.RequestOwnerName);
+                    ReplacePlaceholderWithText(mainPart, "[APPROVAL_MANAGER]", supplyDocument.ApprovalManagerName);
+
+                    // Replace items list placeholder
+                    string itemsList = string.Join("\n", supplyDocument.RequestItems);
+                    ReplacePlaceholderWithText(mainPart, "[ITEMS_LIST]", itemsList);
+
+                    // Save the modified document to the output file
+                    doc.Save();
+                }
             }
         }
 
-        public static void GenerateClaimsDocument(ClaimsDocument claimsDocument, string filePath)
+        public static void GenerateClaimsDocument(ClaimsDocument claimsDocument, string filePath, string templateFilePath)
         {
-            using (WordprocessingDocument doc = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+            // Load the template document
+            using (WordprocessingDocument templateDoc = WordprocessingDocument.Open(templateFilePath, false))
             {
-                MainDocumentPart mainPart = doc.AddMainDocumentPart();
-                mainPart.Document = new Document();
-                Body body = new Body();
-                CreateParagraph(body, String.Format("Request id: {0}", claimsDocument.RequestId.ToString()));
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, String.Format("Request owner: {0};  Signature:", claimsDocument.RequestOwnerName));
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, String.Format("Request manager: {0};  Signature:", claimsDocument.ApprovalManagerName));
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, String.Format("Request courier: {0};  Signature:", claimsDocument.CourierName));
-
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, "Items list:");
-
-                foreach (string item in claimsDocument.RequestItems)
+                // Create a new document based on the template
+                using (WordprocessingDocument doc = (WordprocessingDocument)templateDoc.Clone(filePath))
                 {
-                    CreateParagraph(body, item);
+                    // Access the main part of the document
+                    MainDocumentPart mainPart = doc.MainDocumentPart;
+
+                    // Find and replace placeholders in the document with actual values
+                    ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", claimsDocument.RequestId.ToString());
+                    ReplacePlaceholderWithText(mainPart, "[REQUEST_OWNER]", claimsDocument.RequestOwnerName);
+                    ReplacePlaceholderWithText(mainPart, "[APPROVAL_MANAGER]", claimsDocument.ApprovalManagerName);
+                    ReplacePlaceholderWithText(mainPart, "[REQUEST_COURIER]", claimsDocument.CourierName);
+                    ReplacePlaceholderWithText(mainPart, "[CLAIMS_TEXT]", claimsDocument.ClaimsText);
+
+                    // Replace items list placeholder
+                    string itemsList = string.Join("\n", claimsDocument.RequestItems);
+                    ReplacePlaceholderWithText(mainPart, "[ITEMS_LIST]", itemsList);
+
+                    // Save the modified document to the output file
+                    doc.Save();
                 }
-
-                CreateEmptyParagraph(body);
-                CreateParagraph(body, "Claims text:");
-                CreateParagraph(body, claimsDocument.ClaimsText);
-
-                mainPart.Document.Append(body);
             }
         }
 
-        static void CreateParagraph(Body body, string text)
+        // Helper method to replace placeholders in the document with text
+        private static void ReplacePlaceholderWithText(MainDocumentPart mainPart, string placeholder, string newText)
         {
-            Paragraph paragraph = new Paragraph();
-            Run run = new Run();
-            Text textElement = new Text(text);
-
-            // Apply formatting
-            RunProperties runProperties = new RunProperties();
-            FontSize fontSize = new FontSize() { Val = "24" }; // Font size 24
-            Color color = new Color() { Val = "0000FF" }; // Blue color
-            Bold bold = new Bold(); // Bold text
-
-            runProperties.Append(fontSize);
-            runProperties.Append(color);
-            runProperties.Append(bold);
-
-            run.Append(runProperties);
-            run.Append(textElement);
-            paragraph.Append(run);
-
-            body.Append(paragraph);
-        }
-
-        static void CreateEmptyParagraph(Body body)
-        {
-            Paragraph paragraph = new Paragraph();
-            ParagraphProperties paragraphProperties = new ParagraphProperties();
-            SpacingBetweenLines spacingBetweenLines = new SpacingBetweenLines() { Before = "240", After = "240" }; // 240 = 1/3 inch
-
-            paragraphProperties.Append(spacingBetweenLines);
-            paragraph.Append(paragraphProperties);
-
-            body.Append(paragraph);
+            // Iterate through all paragraphs in the document
+            foreach (Paragraph paragraph in mainPart.Document.Body.Elements<Paragraph>())
+            {
+                // Iterate through all runs in the paragraph
+                foreach (Run run in paragraph.Elements<Run>())
+                {
+                    // Find and replace the placeholder with the new text
+                    foreach (Text text in run.Elements<Text>())
+                    {
+                        if (text.Text.Contains(placeholder))
+                        {
+                            text.Text = text.Text.Replace(placeholder, newText);
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -1,3 +1,5 @@
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -11,6 +13,11 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        //Get Secrets from Azure Key Vault
+        var keyVaultUrl = builder.Configuration.GetSection("AzureKeyVault")["KeyVaultUrl"];
+        var credential = new ManagedIdentityCredential();
+        var client = new SecretClient(new Uri(keyVaultUrl), credential);
 
         // Configure Serilog logging
         Log.Logger = new LoggerConfiguration()
@@ -24,7 +31,7 @@ public class Program
         builder.Services.AddSignalR();
 
 		// Add services to the container.
-		var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+		string connectionString = client.GetSecret("DatabaseConnectionString").Value.Value ?? throw new InvalidOperationException("Database Connection string not found.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -116,7 +123,7 @@ public class Program
 
             var adminSection = app.Configuration.GetSection("SuperAdmin");
             string email = adminSection.GetSection("Email").Value;
-            string password = adminSection.GetSection("Password").Value;
+            string password = client.GetSecret("SuperAdminPassword").Value.Value;
             if (await userManager.FindByEmailAsync(email) == null)
             {
                 var user = new User();

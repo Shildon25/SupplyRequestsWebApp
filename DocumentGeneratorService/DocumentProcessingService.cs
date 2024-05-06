@@ -1,3 +1,7 @@
+using Azure;
+using Azure.Core;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using SupplyManagement.Models.Enums;
 using System.Data;
 using System.Data.SqlClient;
@@ -8,12 +12,16 @@ namespace SupplyManagement.DocumentGeneratorService
     {
         private readonly string _filePathBase;
         private readonly string _connectionString;
+        private readonly string _storageConnectionString;
+        private readonly string _containerName;
         private readonly ILogger<DocumentProcessingService> _logger;
 
-        public DocumentProcessingService(string filePathBase, string connectionString, ILogger<DocumentProcessingService>? logger)
+        public DocumentProcessingService(string filePathBase, string connectionString, string storageConnectionString, string containerName, ILogger<DocumentProcessingService>? logger)
         {
             _filePathBase = filePathBase;
             _connectionString = connectionString;
+            _storageConnectionString = storageConnectionString;
+            _containerName = containerName;
             _logger = logger;
         }
 
@@ -26,24 +34,16 @@ namespace SupplyManagement.DocumentGeneratorService
                     // Retrieve documents from the database
                     List<SupplyDocument> supplyRequestDocuments = new List<SupplyDocument>();
                     List<ClaimsDocument> claimsDocuments = new List<ClaimsDocument>();
+                    BlobServiceClient blobServiceClient = new BlobServiceClient(_storageConnectionString);
+                    BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+
+                    // Create the container if it doesn't exist
+                    await containerClient.CreateIfNotExistsAsync();
 
                     await GetRequestsFromDatabase(_connectionString, supplyRequestDocuments, claimsDocuments);
 
                     // Process requests in parallel
-                    await ProcessRequests(supplyRequestDocuments, claimsDocuments, _filePathBase);
-
-                    // Update document statuses in the database
-                    foreach (var document in supplyRequestDocuments)
-                    {
-                        var filePath = Path.Combine(_filePathBase, $"SupplyDocument_{document.RequestId}.docx");
-                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.DelailsDocumentGenerated);
-                    }
-
-                    foreach (var document in claimsDocuments)
-                    {
-                        var filePath = Path.Combine(_filePathBase, $"ClaimsDocument_{document.RequestId}.docx");
-                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.ClaimsDocumentGenerated);
-                    }
+                    await ProcessRequests(supplyRequestDocuments, claimsDocuments, _filePathBase, containerClient);
 
                     // Log information
                     _logger.LogInformation("Document processing completed.");
@@ -95,8 +95,24 @@ namespace SupplyManagement.DocumentGeneratorService
 
                     while (await reader.ReadAsync())
                     {
-                        // Read data from the database
-                        // Process data and populate supplyRequestDocuments and claimsDocuments lists
+                        int requestId = reader.GetInt32(0);
+                        int requestStatus = reader.GetInt32(1);
+                        List<string> items = reader.GetString(2).Split(',').ToList();
+                        string createdBy = reader.GetString(3) ?? "";
+                        string approvedBy = reader.GetString(4) ?? "";
+                        string deliveredBy = reader?.GetString(5) ?? "";
+                        string claimsText = reader.IsDBNull(6) ? "" : reader?.GetString(6);
+
+                        if (requestStatus == (int)SupplyRequestStatuses.Approved)
+                        {
+                            var approvedDoc = new SupplyDocument(requestId, createdBy, approvedBy, items);
+                            supplyRequestDocuments.Add(approvedDoc);
+                        }
+                        else if (requestStatus == (int)SupplyRequestStatuses.DeliveredWithClaims)
+                        {
+                            var claimsDoc = new ClaimsDocument(requestId, createdBy, approvedBy, deliveredBy, claimsText, items);
+                            claimsDocuments.Add(claimsDoc);
+                        }
                     }
 
                     reader.Close();
@@ -111,18 +127,27 @@ namespace SupplyManagement.DocumentGeneratorService
             return (supplyRequestDocuments, claimsDocuments);
         }
 
-        private async Task ProcessRequests(List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments, string filePathBase)
+        private async Task ProcessRequests(List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments, string filePathBase, BlobContainerClient containerClient)
         {
             try
             {
+                var tasks = new List<Task>();
 
-                // Process requests in parallel
-                await Task.WhenAll(supplyRequestDocuments.Select(async document =>
+                // Process supply request documents
+                tasks.AddRange(supplyRequestDocuments.Select(async document =>
                 {
                     try
                     {
                         // Generate supply document
-                        DocumentGenerator.GenerateSupplyDocument(document, Path.Combine(filePathBase, $"SupplyDocument_{document.RequestId}.docx"));
+                        string filePath = Path.Combine(filePathBase, $"SupplyDocument_{document.RequestId}.docx");
+                        string templateFilePath = "Templates//Supply Document.docx";
+
+
+                        DocumentGenerator.GenerateSupplyDocument(document, filePath, templateFilePath);
+                        
+                        await UploadFileToBlobStorage(containerClient, filePath);
+                        
+                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.DelailsDocumentGenerated, containerClient);
                     }
                     catch (Exception ex)
                     {
@@ -131,12 +156,20 @@ namespace SupplyManagement.DocumentGeneratorService
                     }
                 }));
 
-                await Task.WhenAll(claimsDocuments.Select(async document =>
+                // Process claims documents
+                tasks.AddRange(claimsDocuments.Select(async document =>
                 {
                     try
                     {
                         // Generate claims document
-                        DocumentGenerator.GenerateClaimsDocument(document, Path.Combine(filePathBase, $"ClaimsDocument_{document.RequestId}.docx"));
+                        string filePath = Path.Combine(filePathBase, $"ClaimsDocument_{document.RequestId}.docx");
+                        string templateFilePath = "Templates//Claims Document.docx";
+
+                        DocumentGenerator.GenerateClaimsDocument(document, filePath, templateFilePath);
+                        
+                        await UploadFileToBlobStorage(containerClient, filePath);
+                        
+                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.ClaimsDocumentGenerated, containerClient);
                     }
                     catch (Exception ex)
                     {
@@ -144,6 +177,8 @@ namespace SupplyManagement.DocumentGeneratorService
                         _logger.LogError(ex, $"An error occurred while generating claims document for request ID: {document.RequestId}");
                     }
                 }));
+
+                await Task.WhenAll(tasks);
             }
             catch (Exception ex)
             {
@@ -152,12 +187,12 @@ namespace SupplyManagement.DocumentGeneratorService
             }
         }
 
-        private async Task CheckDocumentCreationAndChangeStatus(string connectionString, string filePath, int requestId, SupplyRequestStatuses status)
+        private async Task CheckDocumentCreationAndChangeStatus(string connectionString, string filePath, int requestId, SupplyRequestStatuses status, BlobContainerClient containerClient)
         {
             try
             {
-                // Check if the document was created
-                if (File.Exists(filePath))
+                // Check if the blob exists in the container
+                if (await BlobExistsAsync(containerClient, Path.GetFileName(filePath)))
                 {
                     // Update status in the database
                     await UpdateStatusInDatabase(connectionString, requestId, status);
@@ -205,6 +240,37 @@ namespace SupplyManagement.DocumentGeneratorService
             {
                 // Log error
                 _logger.LogError(ex, $"An error occurred while updating status in the database for request ID: {requestId}");
+            }
+        }
+
+        private async Task UploadFileToBlobStorage(BlobContainerClient containerClient, string filePath)
+        {
+            BlobClient blobClient = containerClient.GetBlobClient(Path.GetFileName(filePath));
+
+            // Upload the file to blob storage
+            await blobClient.UploadAsync(filePath, true);
+
+            // Log information
+            _logger.LogInformation($"File {Path.GetFileName(filePath)} uploaded to Azure Storage.");
+        }
+
+        private async Task<bool> BlobExistsAsync(BlobContainerClient containerClient, string blobName)
+        {
+            try
+            {
+                // Check if the blob exists in the container
+                return await containerClient.GetBlobClient(blobName).ExistsAsync();
+            }
+            catch (RequestFailedException ex) when (ex.ErrorCode == BlobErrorCode.BlobNotFound)
+            {
+                // If the blob does not exist, return false
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // Log any other errors
+                _logger.LogError(ex, $"An error occurred while checking if blob {blobName} exists.");
+                throw; // Rethrow the exception for the caller to handle
             }
         }
     }
