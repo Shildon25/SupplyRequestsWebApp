@@ -16,7 +16,7 @@ namespace SupplyManagement.DocumentGeneratorService
         private readonly string _containerName;
         private readonly ILogger<DocumentProcessingService> _logger;
 
-        public DocumentProcessingService(string filePathBase, string connectionString, string storageConnectionString, string containerName, ILogger<DocumentProcessingService>? logger)
+        public DocumentProcessingService(string filePathBase, string connectionString, string storageConnectionString, string containerName, ILogger<DocumentProcessingService> logger)
         {
             _filePathBase = filePathBase;
             _connectionString = connectionString;
@@ -32,13 +32,13 @@ namespace SupplyManagement.DocumentGeneratorService
                 try
                 {
                     // Retrieve documents from the database
-                    List<SupplyDocument> supplyRequestDocuments = new List<SupplyDocument>();
-                    List<ClaimsDocument> claimsDocuments = new List<ClaimsDocument>();
-                    BlobServiceClient blobServiceClient = new BlobServiceClient(_storageConnectionString);
+                    List<SupplyDocument> supplyRequestDocuments = [];
+                    List<ClaimsDocument> claimsDocuments = [];
+                    BlobServiceClient blobServiceClient = new(_storageConnectionString);
                     BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
 
                     // Create the container if it doesn't exist
-                    await containerClient.CreateIfNotExistsAsync();
+                    await containerClient.CreateIfNotExistsAsync(cancellationToken: stoppingToken);
 
                     await GetRequestsFromDatabase(_connectionString, supplyRequestDocuments, claimsDocuments);
 
@@ -91,7 +91,7 @@ namespace SupplyManagement.DocumentGeneratorService
                     command.Parameters["@ApprovedStatus"].Value = (int)SupplyRequestStatuses.Approved;
                     command.Parameters.Add("@ClaimsStatus", SqlDbType.Int);
                     command.Parameters["@ClaimsStatus"].Value = (int)SupplyRequestStatuses.DeliveredWithClaims;
-                    SqlDataReader reader = await command.ExecuteReaderAsync();
+                    SqlDataReader reader = await command.ExecuteReaderAsync() ?? throw new NullReferenceException("Failed to retrieve reader for the query.");
 
                     while (await reader.ReadAsync())
                     {
@@ -100,8 +100,8 @@ namespace SupplyManagement.DocumentGeneratorService
                         List<string> items = reader.GetString(2).Split(',').ToList();
                         string createdBy = reader.GetString(3) ?? "";
                         string approvedBy = reader.GetString(4) ?? "";
-                        string deliveredBy = reader?.GetString(5) ?? "";
-                        string claimsText = reader.IsDBNull(6) ? "" : reader?.GetString(6);
+                        string deliveredBy = reader.GetString(5) ?? "";
+                        string claimsText = reader.IsDBNull(6) ? "" : reader.GetString(6);
 
                         if (requestStatus == (int)SupplyRequestStatuses.Approved)
                         {
@@ -152,7 +152,7 @@ namespace SupplyManagement.DocumentGeneratorService
                     catch (Exception ex)
                     {
                         // Log error
-                        _logger.LogError(ex, $"An error occurred while generating supply document for request ID: {document.RequestId}");
+                        _logger.LogError(ex, "An error occurred while generating supply document for request ID: {id}", document.RequestId);
                     }
                 }));
 
@@ -174,7 +174,7 @@ namespace SupplyManagement.DocumentGeneratorService
                     catch (Exception ex)
                     {
                         // Log error
-                        _logger.LogError(ex, $"An error occurred while generating claims document for request ID: {document.RequestId}");
+                        _logger.LogError(ex, "An error occurred while generating claims document for request ID: {id}", document.RequestId);
                     }
                 }));
 
@@ -200,13 +200,13 @@ namespace SupplyManagement.DocumentGeneratorService
                 else
                 {
                     // Log info
-                    _logger.LogInformation($"Document not found for request ID: {requestId}. Status not updated.");
+                    _logger.LogInformation("Document not found for request ID: {id}. Status not updated.", requestId);
                 }
             }
             catch (Exception ex)
             {
                 // Log error
-                _logger.LogError(ex, $"An error occurred while checking document creation and changing status for request ID: {requestId}");
+                _logger.LogError(ex, "An error occurred while checking document creation and changing status for request ID: {id}", requestId);
             }
         }
 
@@ -219,7 +219,7 @@ namespace SupplyManagement.DocumentGeneratorService
                     await connection.OpenAsync();
 
                     string query = "UPDATE SupplyRequests SET Status = @NewStatus WHERE Id = @RequestId";
-                    SqlCommand command = new SqlCommand(query, connection);
+                    SqlCommand command = new(query, connection);
                     command.Parameters.AddWithValue("@NewStatus", (int)newStatus);
                     command.Parameters.AddWithValue("@RequestId", requestId);
 
@@ -227,19 +227,19 @@ namespace SupplyManagement.DocumentGeneratorService
                     if (rowsAffected > 0)
                     {
                         // Log info
-                        _logger.LogInformation($"Status updated successfully for request ID: {requestId}");
+                        _logger.LogInformation("Status updated successfully for request ID: {requestId}", requestId);
                     }
                     else
                     {
                         // Log error
-                        _logger.LogError($"Failed to update status for request ID: {requestId}");
+                        _logger.LogError("Failed to update status for request ID: {requestId}", requestId);
                     }
                 }
             }
             catch (Exception ex)
             {
                 // Log error
-                _logger.LogError(ex, $"An error occurred while updating status in the database for request ID: {requestId}");
+                _logger.LogError(ex, "An error occurred while updating status in the database for request ID: {requestId}", requestId);
             }
         }
 
@@ -251,7 +251,7 @@ namespace SupplyManagement.DocumentGeneratorService
             await blobClient.UploadAsync(filePath, true);
 
             // Log information
-            _logger.LogInformation($"File {Path.GetFileName(filePath)} uploaded to Azure Storage.");
+            _logger.LogInformation("File {fileName} uploaded to Azure Storage.", Path.GetFileName(filePath));
         }
 
         private async Task<bool> BlobExistsAsync(BlobContainerClient containerClient, string blobName)
@@ -269,7 +269,7 @@ namespace SupplyManagement.DocumentGeneratorService
             catch (Exception ex)
             {
                 // Log any other errors
-                _logger.LogError(ex, $"An error occurred while checking if blob {blobName} exists.");
+                _logger.LogError(ex, "An error occurred while checking if blob {fileName} exists.", blobName);
                 throw; // Rethrow the exception for the caller to handle
             }
         }

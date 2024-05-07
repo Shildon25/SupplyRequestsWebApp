@@ -1,5 +1,4 @@
-﻿using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace SupplyManagement.DocumentGeneratorService
@@ -12,10 +11,10 @@ namespace SupplyManagement.DocumentGeneratorService
             using (WordprocessingDocument templateDoc = WordprocessingDocument.Open(templateFilePath, false))
             {
                 // Create a new document based on the template
-                using (WordprocessingDocument doc = (WordprocessingDocument)templateDoc.Clone(filePath, true))
+                using (WordprocessingDocument doc = templateDoc.Clone(filePath, true))
                 {
                     // Access the main part of the document
-                    MainDocumentPart mainPart = doc.MainDocumentPart;
+                    MainDocumentPart mainPart = doc.MainDocumentPart ?? throw new NullReferenceException("Failed to access main part of the document");
 
                     // Find and replace placeholders in the document with actual values
                     ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", supplyDocument.RequestId.ToString());
@@ -41,7 +40,7 @@ namespace SupplyManagement.DocumentGeneratorService
                 using (WordprocessingDocument doc = (WordprocessingDocument)templateDoc.Clone(filePath))
                 {
                     // Access the main part of the document
-                    MainDocumentPart mainPart = doc.MainDocumentPart;
+                    MainDocumentPart mainPart = doc.MainDocumentPart ?? throw new NullReferenceException("Failed to access main part of the document");
 
                     // Find and replace placeholders in the document with actual values
                     ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", claimsDocument.RequestId.ToString());
@@ -64,7 +63,8 @@ namespace SupplyManagement.DocumentGeneratorService
         private static void ReplacePlaceholderWithText(MainDocumentPart mainPart, string placeholder, string newText)
         {
             // Iterate through all paragraphs in the document
-            foreach (Paragraph paragraph in mainPart.Document.Body.Elements<Paragraph>())
+            Body body = mainPart.Document.Body ?? throw new NullReferenceException("Failed to access body of the document");
+            foreach (Paragraph paragraph in body.Elements<Paragraph>())
             {
                 // Iterate through all runs in the paragraph
                 foreach (Run run in paragraph.Elements<Run>())
