@@ -4,15 +4,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using SupplyManagement.WebApp.Data;
-using SupplyManagement.Models;
 using SupplyManagement.Helpers;
+using SupplyManagement.Models;
 using SupplyManagement.Models.ViewModels;
+using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 {
-	[Area("Manager")]
+    [Area("Manager")]
     [Authorize(Policy = "Manager")]
     public class ItemController : Controller
     {
@@ -21,7 +21,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
         private readonly ILogger<ItemController> _logger;
         private readonly UserHelper _userHelper;
 
-        public ItemController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ItemController>? logger)
+        public ItemController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ItemController> logger)
         {
             _context = context;
             _userManager = userManager;
@@ -60,7 +60,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving items. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving items. {0}", ex.Message)));
 			}
 		}
 
@@ -87,7 +87,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If item is not found, return NotFound result
 				if (item == null)
 				{
-					throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Item not found with id: {0}", id));
 				}
 
 				// Return the view with the item details
@@ -100,7 +100,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details. {0}", ex.Message)));
 			}
 		}
 
@@ -120,7 +120,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying item creation view. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying item creation view. {0}", ex.Message)));
 			}
 		}
 
@@ -153,10 +153,11 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					item.CreatedByUserId = userId;
 
 					// Find the vendor associated with the item
-					item.Vendor = await _context.Vendors.FirstOrDefaultAsync(v => v.Id == item.VendorId);
+					item.Vendor = await _context.Vendors.FirstOrDefaultAsync(v => v.Id == item.VendorId) 
+						?? throw new KeyNotFoundException(String.Format("Vendor is provided id not found for the item."));
 
-					// Add the item to the context and save changes
-					_context.Add(item);
+                    // Add the item to the context and save changes
+                    _context.Add(item);
 					await _context.SaveChangesAsync();
 
 					// Redirect to the Index action
@@ -173,7 +174,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating item. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating item. {0}", ex.Message)));
 			}
 		}
 
@@ -200,7 +201,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If item is not found, return NotFound result
 				if (item == null)
 				{
-					throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Item not found with id: {0}", id));
 				}
 
 				// Populate the dropdown list with vendors
@@ -216,7 +217,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details for edit. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details for edit. {0}", ex.Message)));
 			}
 		}
 
@@ -241,10 +242,11 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					&& ModelState["VendorId"]?.ValidationState == ModelValidationState.Valid)
 				{
 					// Find the vendor associated with the item
-					var vendor = await _context.Vendors.FirstOrDefaultAsync(i => i.Id == item.VendorId);
+					var vendor = await _context.Vendors.FirstOrDefaultAsync(i => i.Id == item.VendorId)
+                        ?? throw new KeyNotFoundException(String.Format("Vendor is provided id not found for the item."));
 
-					// Check if an item with the same name for the same vendor already exists
-					if (await _context.Items.Include(i => i.Vendor).FirstOrDefaultAsync(i => i.Name == item.Name && i.Vendor.Name == vendor.Name) != null)
+                    // Check if an item with the same name for the same vendor already exists
+                    if (await _context.Items.Include(i => i.Vendor).FirstOrDefaultAsync(i => i.Name == item.Name && i.Vendor.Name == vendor.Name) != null)
 					{
 						ModelState.AddModelError(string.Empty, "Item with this name for this vendor already exists.");
 						return View(item);
@@ -256,7 +258,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// If item is not found, return NotFound
 					if (foundItem == null)
 					{
-						throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
+						throw new KeyNotFoundException(String.Format("Item not found with id: {0}", id));
 					}
 
 					// Update item properties
@@ -281,7 +283,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while updating item. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while updating item. {0}", ex.Message)));
 			}
 		}
 
@@ -308,7 +310,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If item is not found, return NotFound result
 				if (item == null)
 				{
-					throw new KeyNotFoundException(String.Format("Item not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Item not found with id: {0}", id));
 				}
 
 				// Return the view with the item details
@@ -321,7 +323,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details for deletion. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving item details for deletion. {0}", ex.Message)));
 			}
 		}
 
@@ -342,27 +344,41 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				}
 
 				// Find the item with the provided id
-				var item = await _context.Items.FindAsync(id);
+				var item = await _context.Items.Include(i => i.Vendor).FirstOrDefaultAsync(i => i.Id == id);
 
-				// If item is found, remove it from the context
-				if (item != null)
+                // If item is found, remove it from the context
+                if (item != null)
 				{
 					_context.Items.Remove(item);
 				}
 
-				// Save changes to the database
-				await _context.SaveChangesAsync();
+                try
+                {
+                    // Save changes to the database
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Log any exceptions that occur
+                    _logger.LogError(ex, "Item already used in some of the supply requests. " +
+                                    "Firstly, delete all supply requests related to this item.");
 
-				// Redirect to the Index action
-				return RedirectToAction(nameof(Index));
+                    ModelState.AddModelError(string.Empty, "Item already used in some of the supply requests. " +
+                                    "Firstly, delete all supply requests related to this item.");
+                    return View(item);
+                }
+
+                // Redirect to the Index action
+                return RedirectToAction(nameof(Index));
 			}
 			catch (Exception ex)
 			{
-				// Log any exceptions that occur
-				_logger.LogError(ex, "An error occurred while deleting item with id: {id}", id);
+                // Log any exceptions that occur
+                _logger.LogError(ex, "An error occurred while deleting item with id: {id}", id);
 
-                return View("Error", new ErrorViewModel("Item already used in some of the suply requests. " +
-                                    "Firstly, delete all supply requests related to this item."));
+                // Handle the exception gracefully, perhaps redirecting to an error page
+                // or displaying a friendly error message to the user
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while deleting item. {0}", ex.Message)));
             }
 		}
 

@@ -3,17 +3,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using SupplyManagement.WebApp.Data;
 using SupplyManagement.Models.Enums;
 using SupplyManagement.Models.ViewModels;
+using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
-using Microsoft.AspNetCore.SignalR;
-using SupplyManagement.Models;
-using SupplyManagement.Services;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 {
-	[Area("Manager")]
+    [Area("Manager")]
 	[Authorize(Policy = "Manager")]
 	public class AccountsApprovalController : Controller
 	{
@@ -21,7 +18,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 		private readonly UserManager<IdentityUser> _userManager;
 		private readonly ILogger<AccountsApprovalController> _logger;
 
-		public AccountsApprovalController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<AccountsApprovalController>? logger)
+		public AccountsApprovalController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<AccountsApprovalController> logger)
 		{
 			_context = context;
 			_userManager = userManager;
@@ -52,7 +49,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 						Id = user.Id,
 						Name = user.Name,
 						Surname = user.Surname,
-						Email = user.Email,
+						Email = user.Email ?? "",
 						// Null check for UserManager
 						Roles = String.Join(',', _userManager.GetRolesAsync(user).Result.ToArray() ?? new string[0]),
 						AccountStatus = user.AccountStatus,
@@ -71,7 +68,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving account approval requests. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving account approval requests. {0}", ex.Message)));
 			}
 		}
 
@@ -82,7 +79,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			try
 			{
 				// Logging information
-				_logger.LogInformation($"Editing account with ID: {id}");
+				_logger.LogInformation("Editing account with ID: {id}", id);
 
 				// Check for null ID or Users context
 				if (id == null || _context.Users == null)
@@ -97,8 +94,8 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// Check if user exists
 				if (user == null)
 				{
-					_logger.LogError($"User with ID '{id}' not found.");
-					throw new KeyNotFoundException(String.Format("User not found with id: {id}", id));
+					_logger.LogError("User with ID '{id}' not found.", id);
+					throw new KeyNotFoundException(String.Format("User not found with id: {0}", id));
 				}
 
 				// Create view model for editing
@@ -120,7 +117,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				ViewData["accountStatuses"] = new SelectList(accountStatuses, "Id", "Name");
 
 				// Logging information
-				_logger.LogInformation($"Account with ID: {id} successfully retrieved for editing.");
+				_logger.LogInformation("Account with ID: {id} successfully retrieved for editing.", id);
 
 				return View(approveAccountViewModel);
 			}
@@ -131,7 +128,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while editing the account. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while editing the account. {0}", ex.Message)));
 			}
 		}
 
@@ -143,12 +140,12 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 			try
 			{
 				// Logging information
-				_logger.LogInformation($"Updating account with ID: {id}");
+				_logger.LogInformation("Updating account with ID: {id}", id);
 
 				// Validate ID
 				if (id != approveAccountViewModel.Id)
 				{
-					_logger.LogError($"ID mismatch: Provided ID: {id}, ViewModel ID: {approveAccountViewModel.Id}");
+					_logger.LogError("ID mismatch: Provided ID: {id}, ViewModel ID: {viewModelId}", id, approveAccountViewModel.Id);
 					throw new ArgumentException("Incorrect request id.");
 				}
 
@@ -158,8 +155,8 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// Check if user exists
 				if (user == null)
 				{
-					_logger.LogError($"User with ID '{id}' not found.");
-					throw new KeyNotFoundException(String.Format("User not found with id: {id}", id));
+					_logger.LogError("User with ID '{id}' not found.", id);
+					throw new KeyNotFoundException(String.Format("User not found with id: {0}", id));
 				}
 
 				// Update account status
@@ -169,7 +166,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					_context.Update(user);
 					await _context.SaveChangesAsync();
 					// Logging information
-					_logger.LogInformation($"Account with ID: {id} updated successfully.");
+					_logger.LogInformation("Account with ID: {id} updated successfully.", id);
 
                     return RedirectToAction(nameof(Index));
 				}
@@ -189,7 +186,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
                 // Handle the exception gracefully, perhaps redirecting to an error page
                 // or displaying a friendly error message to the user
-                return View("Error", new ErrorViewModel(String.Format("An error occurred while updating the account. {meesage}", ex.Message)));
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while updating the account. {0}", ex.Message)));
 			}
 		}
 

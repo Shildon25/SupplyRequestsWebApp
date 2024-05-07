@@ -25,9 +25,9 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "An error occurred while displaying the index page.");
+				_logger.LogError(ex, "An error occurred while displaying the Home page.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the index page. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the Home page. {0}", ex.Message)));
 			}
 		}
 
@@ -41,9 +41,9 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "An error occurred while displaying the privacy page.");
+				_logger.LogError(ex, "An error occurred while displaying the Privacy page.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the privacy page. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the Privacy page. {0}", ex.Message)));
 			}
 		}
 
@@ -59,7 +59,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while displaying the error page.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the error page. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the Error page. {0}", ex.Message)));
 			}
 		}
 	}

@@ -3,15 +3,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using SupplyManagement.WebApp.Data;
-using SupplyManagement.Models;
 using SupplyManagement.Helpers;
+using SupplyManagement.Models;
 using SupplyManagement.Models.ViewModels;
+using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 {
-	[Area("Manager")]
+    [Area("Manager")]
     [Authorize(Policy = "Manager")]
     public class VendorController : Controller
     {
@@ -20,7 +20,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
         private readonly ILogger<VendorController> _logger;
         private readonly UserHelper _userHelper;
 
-        public VendorController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<VendorController>? logger)
+        public VendorController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<VendorController> logger)
         {
             _context = context;
             _userManager = userManager;
@@ -58,7 +58,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendors. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendors. {0}", ex.Message)));
 			}
 		}
 
@@ -84,7 +84,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If vendor is not found, return NotFound result
 				if (vendor == null)
 				{
-					throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Vendor not found with id: {0}", id));
 				}
 
 				// Return the view with vendor details
@@ -97,7 +97,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while vendor details. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while vendor details. {0}", ex.Message)));
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while loading the Create page. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while loading the Create page. {0}", ex.Message)));
 			}
 		}
 
@@ -162,7 +162,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating a new vendor. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating a new vendor. {0}", ex.Message)));
 
 			}
 		}
@@ -189,7 +189,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If vendor is not found, return NotFound result
 				if (vendor == null)
 				{
-					throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Vendor not found with id: {0}", id));
 				}
 
 				// Return the view with the vendor details
@@ -202,7 +202,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendor details. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendor details. {0}", ex.Message)));
 			}
 		}
 
@@ -235,7 +235,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// If vendor is not found, return NotFound
 					if (foundVendor == null)
 					{
-						throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
+						throw new KeyNotFoundException(String.Format("Vendor not found with id: {0}", id));
 					}
 
 					// Update the vendor name
@@ -252,7 +252,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 						// Check if the vendor still exists
 						if (!VendorExists(vendor.Id))
 						{
-							throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
+							throw new KeyNotFoundException(String.Format("Vendor not found with id: {0}", id));
 						}
 						else
 						{
@@ -274,7 +274,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while updating vendor. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while updating vendor. {0}", ex.Message)));
 			}
 		}
 
@@ -300,7 +300,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// If vendor is not found, return NotFound result
 				if (vendor == null)
 				{
-					throw new KeyNotFoundException(String.Format("Vendor not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Vendor not found with id: {0}", id));
 				}
 
 				// Return the view with the vendor details
@@ -313,7 +313,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendor details for deletion. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving vendor details for deletion. {0}", ex.Message)));
 			}
 		}
 
@@ -334,29 +334,41 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				}
 
 				// Find the vendor with the provided id
-				var vendor = await _context.Vendors.FindAsync(id);
+				var vendor = await _context.Vendors.Include(v => v.CreatedBy).FirstOrDefaultAsync(v => v.Id == id);
 
 				// If vendor is found, remove it from the context
 				if (vendor != null)
 				{
 					_context.Vendors.Remove(vendor);
-				}
 
-				// Save changes to the database
-				await _context.SaveChangesAsync();
+					try
+					{
+						// Save changes to the database
+						await _context.SaveChangesAsync();
+					}
+					catch (DbUpdateException ex)
+					{
+						// Log any exceptions that occur
+						_logger.LogError(ex, "Vendor already used in some of the supply requests. " +
+							"Firstly, delete all supply requests and items related to this vendor.");
+
+						ModelState.AddModelError(string.Empty, "Vendor already used in some of the supply requests. " +
+							"Firstly, delete all supply requests and items related to this vendor.");
+						return View(vendor);
+					}
+				}
 
 				// Redirect to the Index action
 				return RedirectToAction(nameof(Index));
 			}
-			catch (Exception ex)
+            catch (Exception ex)
 			{
 				// Log any exceptions that occur
 				_logger.LogError(ex, "An error occurred while deleting vendor with id: {id}", id);
 
                 // Handle the exception gracefully, perhaps redirecting to an error page
                 // or displaying a friendly error message to the user
-                return View("Error", new ErrorViewModel("Vendor already used in some of the suply requests. " +
-					"Firstly, delete all supply requests and items related to this vendor."));
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while deleting vendor. {0}", ex.Message)));
             }
 		}
 

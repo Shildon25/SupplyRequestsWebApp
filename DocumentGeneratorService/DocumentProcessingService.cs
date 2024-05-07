@@ -72,7 +72,7 @@ namespace SupplyManagement.DocumentGeneratorService
 
                     // Query to retrieve documents from the database
                     string query = "SELECT sr.Id, sr.Status, " +
-                        "STRING_AGG(CONCAT(i.Name, ' - ', v.Name), ', ') AS Items, " +
+                        "STRING_AGG(CONCAT('Item: ', i.Name, '; Vendor: ', v.Name), ', ') AS Items, " +
                         "CONCAT(cu.Name, ' ', cu.Surname) AS CreatedBy, " +
                         "CONCAT(au.Name, ' ', au.Surname) AS ApprovedBy, " +
                         "CONCAT(du.Name, ' ', du.Surname) AS DeliveredBy, " +

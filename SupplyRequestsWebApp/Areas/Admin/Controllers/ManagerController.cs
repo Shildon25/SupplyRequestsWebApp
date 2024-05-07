@@ -2,17 +2,15 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SupplyManagement.WebApp.Data;
 using SupplyManagement.Models;
 using SupplyManagement.Models.Enums;
 using SupplyManagement.Models.ViewModels;
-using System.Data.Common;
+using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
-using Microsoft.Data.SqlClient;
 
 namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 {
-	[Area("Admin")]
+    [Area("Admin")]
     [Authorize(Policy = "Admin")]
     public class ManagerController : Controller
     {
@@ -20,7 +18,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<ManagerController> _logger;
 
-        public ManagerController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ManagerController>? logger)
+        public ManagerController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ManagerController> logger)
         {
             _context = context;
             _userManager = userManager;
@@ -45,11 +43,13 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
 				}
 
+				var currentUserId = _userManager.GetUserId(User);
 				// Retrieve all users in the 'Manager' role
-				var userManagers = await _userManager.GetUsersInRoleAsync("Manager").ConfigureAwait(false);
+				var userManagers = (await _userManager.GetUsersInRoleAsync("Manager").ConfigureAwait(false))
+                    .Where(u => u.Id != currentUserId).ToList();
 
-				// Convert users to RegisterViewModels
-				var managers = userManagers
+                // Convert users to RegisterViewModels
+                var managers = userManagers
 					.Select(u => (User)u)
 					.Select(u => new RegisterViewModel
 					{
@@ -64,7 +64,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					.ToList();
 
 				// Logging information
-				_logger.LogInformation($"Retrieved {managers.Count} managers successfully");
+				_logger.LogInformation("Retrieved {managersNumber} managers successfully", managers.Count);
 
 				// Return the view with the list of managers
 				return View(managers);
@@ -76,7 +76,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 
                 // Handle the exception gracefully, perhaps redirecting to an error page
                 // or displaying a friendly error message to the user
-                return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving managers. {meesage}", ex.Message)));
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving managers. {0}", ex.Message)));
             }
 		}
 
@@ -103,9 +103,9 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 				if (manager == null)
 				{
 					// Log the error
-					_logger.LogError("Manager not found with id: {id}", id);
+					_logger.LogError("Manager not found with id: {0}", id);
 					// Return a not found response
-					throw new KeyNotFoundException(String.Format("Manager not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Manager not found with id: {0}", id));
 				}
 
 				// Create a RegisterViewModel to display manager details
@@ -129,11 +129,11 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 			catch (Exception ex)
 			{
 				// Log any exceptions that occur
-				_logger.LogError(ex, "An error occurred while retrieving manager details for id: {id}", id);
+				_logger.LogError(ex, "An error occurred while retrieving manager details for id: {0}", id);
 
                 // Handle the exception gracefully, perhaps redirecting to an error page
                 // or displaying a friendly error message to the user
-                return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving manager details. {meesage}", ex.Message)));
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while retrieving manager details. {0}", ex.Message)));
 			}
 		}
 
@@ -157,7 +157,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while loading create manager page. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while loading create manager page. {0}", ex.Message)));
 			}
 		}
 
@@ -230,9 +230,6 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					{
 						ModelState.AddModelError(error.Code, error.Description);
 					}
-
-					// Add a general error message to ModelState
-					ModelState.AddModelError(string.Empty, "Invalid");
 				}
 				// If ModelState is not valid, return to the view with the model
 				return View(model);
@@ -244,7 +241,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating a manager. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while creating a manager. {0}", ex.Message)));
 			}
 		}
 
@@ -269,7 +266,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 				// If manager is not found, return NotFound result
 				if (manager == null)
 				{
-					throw new KeyNotFoundException(String.Format("Manager not found with id: {id}", id));
+					throw new KeyNotFoundException(String.Format("Manager not found with id: {0}", id));
 				}
 
 				// Create a view model for the manager
@@ -294,7 +291,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 
 				// Handle the exception gracefully, perhaps redirecting to an error page
 				// or displaying a friendly error message to the user
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while deleting a manager. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while deleting a manager. {0}", ex.Message)));
 			}
 		}
 
@@ -314,20 +311,44 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
 				}
 
-				// Find the user with the provided id
-				var user = await _context.Users.FindAsync(id);
+                // Find the manager with the provided id
+                var manager = await _context.Users.FindAsync(id);
 
-				// If user is found, remove it from the context
-				if (user != null)
+				// If manager is found, remove it from the context
+				if (manager != null)
 				{
-					_context.Users.Remove(user);
-				}
+					_context.Users.Remove(manager);
 
-				// Save changes to the database
-				await _context.SaveChangesAsync();
+					try
+					{
+						// Save changes to the database
+						await _context.SaveChangesAsync();
+					}
+					catch (DbUpdateException ex)
+					{
+						// Log any exceptions that occur
+						_logger.LogError(ex, "Manager already used in some of the supply requests. " +
+										"Firstly, delete all supply requests and items related to this Manager.");
 
-				// Log information
-				_logger.LogInformation("Deleted manager with id: {id}", id);
+						ModelState.AddModelError(string.Empty, "Manager already used in some of the supply requests. " +
+										"Firstly, delete all supply requests and items related to this Manager.");
+
+						var managerView = new RegisterViewModel
+						{
+							Id = manager.Id,
+							Username = manager.UserName ?? "",
+							Email = manager.Email ?? "",
+							Name = manager.Name,
+							Surname = manager.Surname,
+							// Null check for UserManager
+							UserRole = String.Join(',', _userManager.GetRolesAsync(manager).Result?.ToArray() ?? new string[0])
+						};
+						return View(managerView);
+					}
+
+                    // Log information
+                    _logger.LogInformation("Deleted manager with id: {0}", id);
+                }
 
 				// Redirect to the Index action
 				return RedirectToAction(nameof(Index));
@@ -339,8 +360,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 
                 // Handle the exception gracefully, perhaps redirecting to an error page
                 // or displaying a friendly error message to the user
-                return View("Error", new ErrorViewModel("Manager already used in some of the supply requests. " +
-                                    "Firstly, delete all supply requests and items related to this Manager."));
+                return View("Error", new ErrorViewModel(String.Format("An error occurred while deleting manager. {0}", ex.Message)));
             }
 		}
 	}

@@ -7,14 +7,14 @@ using SupplyManagement.Models.ViewModels;
 
 namespace SupplyManagement.WebApp.Areas.Login.Controllers
 {
-	[Area("Login")]
+    [Area("Login")]
     public class AccountController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private ILogger<AccountController> _logger;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ILogger<AccountController>? logger)
+        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -34,7 +34,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while displaying the registration form.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the registration form. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the registration form. {0}", ex.Message)));
 			}
 		}
 
@@ -98,9 +98,6 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 					{
 						ModelState.AddModelError(string.Empty, error.Description);
 					}
-
-					// Add a general error message to the model state
-					ModelState.AddModelError(string.Empty, "Invalid");
 				}
 
 				// If model state is not valid, return the registration view with the model
@@ -110,7 +107,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while processing the registration.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the registration. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the registration. {0}", ex.Message)));
 			}
 		}
 
@@ -127,7 +124,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while displaying the successful registration page.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the successful registration page. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the successful registration page. {0}", ex.Message)));
 			}
 		}
 
@@ -144,7 +141,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while displaying the login page.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the login page. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the login page. {0}", ex.Message)));
 			}
 		}
 
@@ -199,7 +196,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while processing the login.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the login. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the login. {0}", ex.Message)));
 			}
 		}
 
@@ -216,7 +213,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while displaying the change password form.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the change password form. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while displaying the change password form. {0}", ex.Message)));
 			}
 		}
 
@@ -273,7 +270,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while processing the password change.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the password change. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while processing the password change. {0}", ex.Message)));
 			}
 		}
 
@@ -291,7 +288,7 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
 			{
 				_logger.LogError(ex, "An error occurred while logging out the user.");
 				// Handle the exception gracefully, perhaps return an error view
-				return View("Error", new ErrorViewModel(String.Format("An error occurred while logging out the user. {meesage}", ex.Message)));
+				return View("Error", new ErrorViewModel(String.Format("An error occurred while logging out the user. {0}", ex.Message)));
 			}
 		}
 	}
