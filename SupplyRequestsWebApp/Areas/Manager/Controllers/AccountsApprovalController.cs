@@ -104,7 +104,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					Id = user.Id,
 					Name = user.Name,
 					Surname = user.Surname,
-					Email = user.Email,
+					Email = user.Email ?? "",
 					// Null check for UserManager
 					Roles = String.Join(',', _userManager.GetRolesAsync(user).Result?.ToArray() ?? new string[0]),
 					AccountStatus = user.AccountStatus,

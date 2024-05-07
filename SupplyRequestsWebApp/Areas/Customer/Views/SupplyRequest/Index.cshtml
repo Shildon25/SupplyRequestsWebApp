@@ -67,12 +67,12 @@
 					{
 						<td class="d-flex flex-row-reverse">
 							<div class="btn-group">
-								@if (@request.Status.ToString() == "ClaimsDocumentGenerated")
+								@if (@request?.Status.ToString() == "ClaimsDocumentGenerated")
 								{
 									<a asp-action="ResolveClaims" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
 								}
-								<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
-								<a asp-action="Delete" class="btn btn-danger" asp-route-id="@request.Id"><i class="fa fa-trash" aria-hidden="true"></i></a>
+								<a asp-action="Details" class="btn btn-success" asp-route-id="@request?.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+								<a asp-action="Delete" class="btn btn-danger" asp-route-id="@request?.Id"><i class="fa fa-trash" aria-hidden="true"></i></a>
 							</div>
 						</td>
 					}
@@ -80,24 +80,24 @@
 					{
 						<td class="d-flex flex-row-reverse">
 							<div class="btn-group">
-								<a asp-action="Delivered" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-								<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+								<a asp-action="Delivered" class="btn btn-primary" asp-route-id="@request?.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+								<a asp-action="Details" class="btn btn-success" asp-route-id="@request?.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
 							</div>
 						</td>
 					}
 					else if (User.IsInRole("User"))
 					{
-						if (@request.Status.ToString() == "Created")
+						if (@request?.Status.ToString() == "Created")
 						{
 							<td class="d-flex flex-row-reverse">
-								<partial name="~/Views/Shared/_ButtonPartial.cshtml" model="@request.Id" />
+								<partial name="~/Views/Shared/_ButtonPartial.cshtml" model="@request?.Id" />
 							</td>
 						}
 						else
 						{
 							<td class="d-flex flex-row-reverse">
 								<div class="btn-group">
-									<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+									<a asp-action="Details" class="btn btn-success" asp-route-id="@request?.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
 								</div>
 							</td>
 						}

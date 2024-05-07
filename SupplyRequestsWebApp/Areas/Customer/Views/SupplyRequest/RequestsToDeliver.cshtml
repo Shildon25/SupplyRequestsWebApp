@@ -50,8 +50,8 @@
 					<td>@request?.DeliveredBy?.Email</td>
 					<td class="d-flex flex-row-reverse">
 						<div class="btn-group">
-							<a asp-action="Deliver" class="btn btn-primary" asp-route-id="@request.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
-							<a asp-action="Details" class="btn btn-success" asp-route-id="@request.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
+							<a asp-action="Deliver" class="btn btn-primary" asp-route-id="@request?.Id"><i class="fa fa-pencil" aria-hidden="true"></i></a>
+							<a asp-action="Details" class="btn btn-success" asp-route-id="@request?.Id"><i class="fa fa-list" aria-hidden="true"></i></a>
 						</div>
 					</td>
 				</tr>

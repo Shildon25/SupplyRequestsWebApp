@@ -15,7 +15,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         
         //Get Secrets from Azure Key Vault
-        var keyVaultUrl = builder.Configuration.GetSection("AzureKeyVault")["KeyVaultUrl"];
+        var keyVaultUrl = builder.Configuration.GetSection("AzureKeyVault")["KeyVaultUrl"] ?? throw new KeyNotFoundException("Configuration key 'KeyVaultUrl' wasn't found.");
         var credential = new ManagedIdentityCredential();
         var client = new SecretClient(new Uri(keyVaultUrl), credential);
 
@@ -122,15 +122,15 @@ public class Program
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
             var adminSection = app.Configuration.GetSection("SuperAdmin");
-            string email = adminSection.GetSection("Email").Value;
-            string password = adminSection.GetSection("Password").Value;
+            string email = adminSection.GetSection("Email").Value ?? throw new KeyNotFoundException("Configuration key 'Email' wasn't found.");
+            string password = adminSection.GetSection("Password").Value ?? throw new KeyNotFoundException("Configuration key 'Password' wasn't found.");
             if (await userManager.FindByEmailAsync(email) == null)
             {
                 var user = new User();
                 user.Email = email;
-                user.UserName = adminSection.GetSection("UserName").Value;
-                user.Name = adminSection.GetSection("Name").Value;
-                user.Surname = adminSection.GetSection("Surname").Value;
+                user.UserName = adminSection.GetSection("UserName").Value ?? throw new KeyNotFoundException("Configuration key 'UserName' wasn't found.");
+                user.Name = adminSection.GetSection("Name").Value ?? throw new KeyNotFoundException("Configuration key 'Name' wasn't found.");
+                user.Surname = adminSection.GetSection("Surname").Value ?? throw new KeyNotFoundException("Configuration key 'Surname' wasn't found.");
                 user.AccountStatus = AccountStatuses.Approved;
 
                 string[] roles = ["Admin", "Manager", "Courier", "User"];
