@@ -30,8 +30,8 @@ public class Program
 
         builder.Services.AddSignalR();
 
-		// Add services to the container.
-		string connectionString = client.GetSecret("DatabaseConnectionString").Value.Value ?? throw new InvalidOperationException("Database Connection string not found.");
+        // Add services to the container.
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -123,7 +123,7 @@ public class Program
 
             var adminSection = app.Configuration.GetSection("SuperAdmin");
             string email = adminSection.GetSection("Email").Value;
-            string password = client.GetSecret("SuperAdminPassword").Value.Value;
+            string password = adminSection.GetSection("Password").Value;
             if (await userManager.FindByEmailAsync(email) == null)
             {
                 var user = new User();
