@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using SupplyManagement.Models;
 using SupplyManagement.Models.Enums;
+using SupplyManagement.Models.Interfaces;
 using SupplyManagement.Services;
 using SupplyManagement.WebApp.Data;
 
@@ -34,6 +35,7 @@ public class Program
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
+        builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetService<ApplicationDbContext>());
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
         builder.Services.AddCors(options =>

@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.Models;
 using SupplyManagement.Models.Enums;
+using SupplyManagement.Models.Interfaces;
 using SupplyManagement.Models.ViewModels;
-using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Admin.Controllers
@@ -14,11 +14,11 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
     [Authorize(Policy = "Admin")]
     public class ManagerController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<ManagerController> _logger;
 
-        public ManagerController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ManagerController> logger)
+        public ManagerController(IApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ManagerController> logger)
         {
             _context = context;
             _userManager = userManager;
@@ -38,9 +38,9 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 				if (_context.Users == null)
 				{
 					// Log the error
-					_logger.LogError("Entity set 'ApplicationDbContext.Users' is null");
+					_logger.LogError("Entity set 'IApplicationDbContext.Users' is null");
 					// Return a problem response
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Users' is null");
 				}
 
 				var currentUserId = _userManager.GetUserId(User);
@@ -257,7 +257,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					// Log the error
 					_logger.LogError("Id is null or Users DbSet is null");
 					// Return NotFound result
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Users' is null");
 				}
 
 				// Find the manager with the provided id
@@ -308,7 +308,7 @@ namespace SupplyManagement.WebApp.Areas.Admin.Controllers
 					// Log the error
 					_logger.LogError("Users DbSet is null");
 					// Return a Problem result
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Users' is null");
 				}
 
                 // Find the manager with the provided id

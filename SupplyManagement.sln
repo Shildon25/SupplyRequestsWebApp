@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SupplyManagement.Models", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SupplyManagement.Services", "SupplyManagement.Services\SupplyManagement.Services.csproj", "{863E3192-9BAE-420F-9B42-5F751AA2C9B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentGeneratorService", "DocumentGeneratorService\DocumentGeneratorService.csproj", "{90BF4A73-10AD-4D25-BFD2-5605B6A70030}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocumentGeneratorService", "DocumentGeneratorService\DocumentGeneratorService.csproj", "{90BF4A73-10AD-4D25-BFD2-5605B6A70030}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupplyManagement.Tests", "SupplyManagement.Tests\SupplyManagement.Tests.csproj", "{8802079B-180A-4C3C-A84F-7730A7DCD7B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{90BF4A73-10AD-4D25-BFD2-5605B6A70030}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90BF4A73-10AD-4D25-BFD2-5605B6A70030}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90BF4A73-10AD-4D25-BFD2-5605B6A70030}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8802079B-180A-4C3C-A84F-7730A7DCD7B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8802079B-180A-4C3C-A84F-7730A7DCD7B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8802079B-180A-4C3C-A84F-7730A7DCD7B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8802079B-180A-4C3C-A84F-7730A7DCD7B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

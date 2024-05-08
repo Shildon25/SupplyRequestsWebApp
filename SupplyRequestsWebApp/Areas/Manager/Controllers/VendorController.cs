@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.Helpers;
 using SupplyManagement.Models;
+using SupplyManagement.Models.Interfaces;
 using SupplyManagement.Models.ViewModels;
-using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
@@ -15,12 +15,12 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
     [Authorize(Policy = "Manager")]
     public class VendorController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<VendorController> _logger;
         private readonly UserHelper _userHelper;
 
-        public VendorController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<VendorController> logger)
+        public VendorController(IApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<VendorController> logger)
         {
             _context = context;
             _userManager = userManager;
@@ -38,9 +38,9 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (_context.Vendors == null)
 				{
 					// Log the error
-					_logger.LogError("Entity set 'ApplicationDbContext.Vendors' is null");
+					_logger.LogError("Entity set 'IApplicationDbContext.Vendors' is null");
 					// Return a Problem response
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Vendors' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Vendors' is null");
 				}
 
 				// Retrieve all vendors including their creators
@@ -330,7 +330,7 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 					// Log the error
 					_logger.LogError("Vendors DbSet is null");
 					// Return a Problem result
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Vendors' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Vendors' is null");
 				}
 
 				// Find the vendor with the provided id

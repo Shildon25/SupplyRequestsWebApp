@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using SupplyManagement.Helpers;
 using SupplyManagement.Models;
 using SupplyManagement.Models.Enums;
+using SupplyManagement.Models.Interfaces;
 using SupplyManagement.Models.ViewModels;
 using SupplyManagement.Services;
-using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Customer.Controllers
@@ -17,14 +17,14 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 	[Area("Customer")]
 	public class SupplyRequestController : Controller
 	{
-		private readonly ApplicationDbContext _context;
+		private readonly IApplicationDbContext _context;
 		private readonly UserManager<IdentityUser> _userManager;
 		private readonly ILogger<SupplyRequestController> _logger;
 		private readonly UserHelper _userHelper;
         private readonly IHubContext<NotificationHub> _hubContext;
 
 
-        public SupplyRequestController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<SupplyRequestController> logger, IHubContext<NotificationHub> hubContext)
+        public SupplyRequestController(IApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<SupplyRequestController> logger, IHubContext<NotificationHub> hubContext)
 		{
 			_context = context;
 			_userManager = userManager;
@@ -45,7 +45,7 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("Supply requests context is null.");
-                    throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
+                    throw new SqlNullValueException("Entity set 'IApplicationDbContext.SupplyRequests' is null");
 				}
 
                 // Initialize a list to store supply requests
@@ -590,7 +590,7 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("Supply requests context is null.");
-                    throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
+                    throw new SqlNullValueException("Entity set 'IApplicationDbContext.SupplyRequests' is null");
                 }
 
                 // Initialize a list to store supply requests
@@ -775,7 +775,7 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("SupplyRequests context is null.");
-                    throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
+                    throw new SqlNullValueException("Entity set 'IApplicationDbContext.SupplyRequests' is null");
                 }
 
                 // Retrieve supply requests that are ready for delivery and have not been assigned to a courier
@@ -1165,7 +1165,7 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 {
                     // Log an error if the supply requests context is null
                     _logger.LogError("SupplyRequests context is null.");
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.SupplyRequests' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.SupplyRequests' is null");
 				}
 
                 // Retrieve the supply request including related entities

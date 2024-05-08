@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.Helpers;
 using SupplyManagement.Models;
+using SupplyManagement.Models.Interfaces;
 using SupplyManagement.Models.ViewModels;
-using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
@@ -16,12 +16,12 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
     [Authorize(Policy = "Manager")]
     public class ItemController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
         private readonly UserManager<IdentityUser> _userManager;
         private readonly ILogger<ItemController> _logger;
         private readonly UserHelper _userHelper;
 
-        public ItemController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ItemController> logger)
+        public ItemController(IApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<ItemController> logger)
         {
             _context = context;
             _userManager = userManager;
@@ -39,9 +39,9 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (_context.Items == null)
 				{
 					// Log the error
-					_logger.LogError("Entity set 'ApplicationDbContext.Items' is null");
+					_logger.LogError("Entity set 'IApplicationDbContext.Items' is null");
 					// Return a problem response
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Items' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Items' is null");
 				}
 
 				// Retrieve all items including their associated vendor and creator
@@ -338,9 +338,9 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				if (_context.Items == null)
 				{
 					// Log the error
-					_logger.LogError("Entity set 'ApplicationDbContext.Items' is null");
+					_logger.LogError("Entity set 'IApplicationDbContext.Items' is null");
 					// Return a Problem result
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Items' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Items' is null");
 				}
 
 				// Find the item with the provided id

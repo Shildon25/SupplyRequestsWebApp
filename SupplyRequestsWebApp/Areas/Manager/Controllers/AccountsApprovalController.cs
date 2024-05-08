@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SupplyManagement.Models.Enums;
+using SupplyManagement.Models.Interfaces;
 using SupplyManagement.Models.ViewModels;
-using SupplyManagement.WebApp.Data;
 using System.Data.SqlTypes;
 
 namespace SupplyManagement.WebApp.Areas.Manager.Controllers
@@ -14,11 +14,11 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 	[Authorize(Policy = "Manager")]
 	public class AccountsApprovalController : Controller
 	{
-		private readonly ApplicationDbContext _context;
+		private readonly IApplicationDbContext _context;
 		private readonly UserManager<IdentityUser> _userManager;
 		private readonly ILogger<AccountsApprovalController> _logger;
 
-		public AccountsApprovalController(ApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<AccountsApprovalController> logger)
+		public AccountsApprovalController(IApplicationDbContext context, UserManager<IdentityUser> userManager, ILogger<AccountsApprovalController> logger)
 		{
 			_context = context;
 			_userManager = userManager;
@@ -34,11 +34,11 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
 				// Logging information
 				_logger.LogInformation("Retrieving account approval requests.");
 
-				// Null check for ApplicationDbContext
+				// Null check for IApplicationDbContext
 				if (_context.Users == null)
 				{
-					_logger.LogError("Entity set 'ApplicationDbContext.Users' is null");
-					throw new SqlNullValueException("Entity set 'ApplicationDbContext.Users' is null");
+					_logger.LogError("Entity set 'IApplicationDbContext.Users' is null");
+					throw new SqlNullValueException("Entity set 'IApplicationDbContext.Users' is null");
 				}
 
 				// Retrieve users with Created account status
