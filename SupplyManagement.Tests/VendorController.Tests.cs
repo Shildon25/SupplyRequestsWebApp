@@ -1,19 +1,18 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SupplyManagement.Controllers.Tests.Helpers;
 using SupplyManagement.Models;
 using SupplyManagement.Models.Interfaces;
 using SupplyManagement.Models.ViewModels;
-using SupplyManagement.Tests.Helpers;
 using SupplyManagement.WebApp.Areas.Manager.Controllers;
 using System.Data.SqlTypes;
 using System.Security.Claims;
 
-namespace SupplyManagement.Tests.Controllers
+namespace SupplyManagement.Controllers.Tests
 {
     [TestClass]
     public class VendorControllerTests
@@ -124,7 +123,7 @@ namespace SupplyManagement.Tests.Controllers
         }
 
         [TestMethod]
-        public async Task Create_Post_ValidModelState_RedirectsToIndex()
+        public async Task Create_Post_ValidModelState_ReturnsViewWithVendor()
         {
             // Arrange
             var vendor = new Vendor { Id = 1, Name = "Vendor 1" };
@@ -142,7 +141,7 @@ namespace SupplyManagement.Tests.Controllers
         }
 
         [TestMethod]
-        public async Task Create_ModelStateInvalid_ReturnsViewWithModel()
+        public async Task Create_ModelStateInvalid_ReturnsViewWithVendor()
         {
             // Arrange
             var vendor = new Vendor();
@@ -158,7 +157,7 @@ namespace SupplyManagement.Tests.Controllers
         }
 
         [TestMethod]
-        public async Task Create_VendorExists_ReturnsViewWithModel()
+        public async Task Create_VendorExists_ReturnsViewWithVendor()
         {
             int vendorId = 1;
             var vendor = new Vendor { Id = vendorId, Name = "Vendor 1" };
@@ -205,7 +204,7 @@ namespace SupplyManagement.Tests.Controllers
         }
 
         [TestMethod]
-        public async Task Edit_Post_ValidModelState_RedirectsToIndex()
+        public async Task Edit_Post_ReturnsViewWithVendor()
         {
             // Arrange
             int vendorId = 1;

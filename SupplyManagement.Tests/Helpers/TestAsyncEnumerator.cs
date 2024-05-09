@@ -1,4 +1,4 @@
-﻿namespace SupplyManagement.Tests.Helpers
+﻿namespace SupplyManagement.Controllers.Tests.Helpers
 {
     public class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
     {

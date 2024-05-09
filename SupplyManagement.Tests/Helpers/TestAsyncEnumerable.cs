@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace SupplyManagement.Tests.Helpers
+namespace SupplyManagement.Controllers.Tests.Helpers
 {
     public class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
     {

@@ -1,5 +1,4 @@
 using Azure;
-using Azure.Core;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using SupplyManagement.Models.Enums;
@@ -10,6 +9,9 @@ namespace SupplyManagement.DocumentGeneratorService
 {
     public class DocumentProcessingService : BackgroundService
     {
+        private const string SupplyDocumentTemplateFilePath = "Templates//Supply Document.docx";
+        private const string ClaimsDocumentTemplateFilePath = "Templates//Claims Document.docx";
+
         private readonly string _filePathBase;
         private readonly string _connectionString;
         private readonly string _storageConnectionString;
@@ -140,10 +142,9 @@ namespace SupplyManagement.DocumentGeneratorService
                     {
                         // Generate supply document
                         string filePath = Path.Combine(filePathBase, $"SupplyDocument_{document.RequestId}.docx");
-                        string templateFilePath = "Templates//Supply Document.docx";
 
 
-                        DocumentGenerator.GenerateSupplyDocument(document, filePath, templateFilePath);
+                        DocumentGenerator.GenerateSupplyDocument(document, filePath, SupplyDocumentTemplateFilePath);
                         
                         await UploadFileToBlobStorage(containerClient, filePath);
                         
@@ -163,9 +164,8 @@ namespace SupplyManagement.DocumentGeneratorService
                     {
                         // Generate claims document
                         string filePath = Path.Combine(filePathBase, $"ClaimsDocument_{document.RequestId}.docx");
-                        string templateFilePath = "Templates//Claims Document.docx";
 
-                        DocumentGenerator.GenerateClaimsDocument(document, filePath, templateFilePath);
+                        DocumentGenerator.GenerateClaimsDocument(document, filePath, ClaimsDocumentTemplateFilePath);
                         
                         await UploadFileToBlobStorage(containerClient, filePath);
                         

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Query;
 using System.Linq.Expressions;
 
-namespace SupplyManagement.Tests.Helpers
+namespace SupplyManagement.Controllers.Tests.Helpers
 {
     public class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
     {

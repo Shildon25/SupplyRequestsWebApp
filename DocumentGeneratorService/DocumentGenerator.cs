@@ -37,7 +37,7 @@ namespace SupplyManagement.DocumentGeneratorService
             using (WordprocessingDocument templateDoc = WordprocessingDocument.Open(templateFilePath, false))
             {
                 // Create a new document based on the template
-                using (WordprocessingDocument doc = (WordprocessingDocument)templateDoc.Clone(filePath))
+                using (WordprocessingDocument doc = templateDoc.Clone(filePath, true))
                 {
                     // Access the main part of the document
                     MainDocumentPart mainPart = doc.MainDocumentPart ?? throw new NullReferenceException("Failed to access main part of the document");
