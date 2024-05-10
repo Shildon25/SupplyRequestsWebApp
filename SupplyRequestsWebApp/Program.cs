@@ -31,8 +31,8 @@ public class Program
 
         builder.Services.AddSignalR();
 
-        // Add services to the container.
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+		// Add services to the container.
+		string connectionString = client.GetSecret("DatabaseConnectionString").Value.Value ?? throw new InvalidOperationException("Database Connection string not found.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
         builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetService<ApplicationDbContext>());
@@ -124,8 +124,8 @@ public class Program
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
 
             var adminSection = app.Configuration.GetSection("SuperAdmin");
-            string email = adminSection.GetSection("Email").Value ?? throw new KeyNotFoundException("Configuration key 'Email' wasn't found.");
-            string password = adminSection.GetSection("Password").Value ?? throw new KeyNotFoundException("Configuration key 'Password' wasn't found.");
+            string email = adminSection.GetSection("Email").Value;
+            string password = client.GetSecret("SuperAdminPassword").Value.Value;
             if (await userManager.FindByEmailAsync(email) == null)
             {
                 var user = new User();

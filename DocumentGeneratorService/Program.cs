@@ -17,9 +17,9 @@ builder.Services.AddHostedService<DocumentProcessingService>(serviceProvider =>
     var credential = new ManagedIdentityCredential();
     var client = new SecretClient(new Uri(keyVaultUrl), credential);
 
-    var storageConnectionString = configuration.GetSection("Azure")["StorageConnectionString"] ?? throw new KeyNotFoundException("Configuration key 'StorageConnectionString' wasn't found.");
-    var containerName = configuration.GetSection("Azure")["ContainerName"] ?? throw new KeyNotFoundException("Configuration key 'ContainerName' wasn't found.");
-    var connectionString = configuration.GetConnectionString("DefaultConnection") ?? throw new KeyNotFoundException("Configuration key 'DefaultConnection' wasn't found.");
+    string connectionString = client.GetSecret("DatabaseConnectionString").Value.Value ?? throw new InvalidOperationException("Database Connection string not found.");
+    var storageConnectionString = client.GetSecret("AzureStorageConnectionString").Value.Value ?? throw new InvalidOperationException("Storage Connection string not found.");
+    var containerName = client.GetSecret("AzureStorageContainerName").Value.Value ?? throw new InvalidOperationException("Azure Container Name not found.");
 
     // Inject the logger into the DocumentProcessingService constructor
     var logger = serviceProvider.GetRequiredService<ILogger<DocumentProcessingService>>();
