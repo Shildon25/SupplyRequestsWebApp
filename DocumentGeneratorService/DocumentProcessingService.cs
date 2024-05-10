@@ -49,9 +49,6 @@ namespace SupplyManagement.DocumentGeneratorService
 
                     // Log information
                     _logger.LogInformation("Document processing completed.");
-
-                    // Wait for 1 hour before checking the database again
-                    await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
                 }
                 catch (Exception ex)
                 {

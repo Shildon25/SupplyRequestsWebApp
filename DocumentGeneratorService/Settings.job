@@ -1,0 +1,4 @@
+{
+  //    Runs every 5 minutes
+  "schedule": "0 */5 * * * *"
+}
