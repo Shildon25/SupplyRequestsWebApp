@@ -29,35 +29,32 @@ namespace SupplyManagement.DocumentGeneratorService
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                try
-                {
-                    // Retrieve documents from the database
-                    List<SupplyDocument> supplyRequestDocuments = [];
-                    List<ClaimsDocument> claimsDocuments = [];
-                    BlobServiceClient blobServiceClient = new(_storageConnectionString);
-                    BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+                // Retrieve documents from the database
+                List<SupplyDocument> supplyRequestDocuments = [];
+                List<ClaimsDocument> claimsDocuments = [];
+                BlobServiceClient blobServiceClient = new(_storageConnectionString);
+                BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
 
-                    // Create the container if it doesn't exist
-                    await containerClient.CreateIfNotExistsAsync(cancellationToken: stoppingToken);
+                // Create the container if it doesn't exist
+                await containerClient.CreateIfNotExistsAsync(cancellationToken: stoppingToken);
 
-                    await GetRequestsFromDatabase(_connectionString, supplyRequestDocuments, claimsDocuments);
+                await GetRequestsFromDatabase(_connectionString, supplyRequestDocuments, claimsDocuments);
 
-                    // Process requests in parallel
-                    await ProcessRequests(supplyRequestDocuments, claimsDocuments, _filePathBase, containerClient);
+                // Process requests in parallel
+                await ProcessRequests(supplyRequestDocuments, claimsDocuments, _filePathBase, containerClient);
 
-                    // Log information
-                    _logger.LogInformation("Document processing completed.");
-                }
-                catch (Exception ex)
-                {
-                    // Log error
-                    _logger.LogError(ex, "An error occurred while processing documents.");
+                // Log information
+                _logger.LogInformation("Document processing completed.");
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                _logger.LogError(ex, "An error occurred while processing documents.");
 
-                    // Handle the exception as needed
-                    // For example, you can rethrow the exception, log it and continue, or perform other actions.
-                }
+                // Handle the exception as needed
+                // For example, you can rethrow the exception, log it and continue, or perform other actions.
             }
         }
 
