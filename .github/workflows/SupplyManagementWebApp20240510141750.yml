@@ -1,10 +1,10 @@
-name: Build and deploy .NET Core application to Web App SupplyManagementWebApp20240509181547
+name: Build and deploy .NET Core application to Web App SupplyManagementWebApp20240510141750
 on:
   push:
     branches:
     - master
 env:
-  AZURE_WEBAPP_NAME: SupplyManagementWebApp20240509181547
+  AZURE_WEBAPP_NAME: SupplyManagementWebApp20240510141750
   AZURE_WEBAPP_PACKAGE_PATH: SupplyRequestsWebApp\published
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 8.0.x
@@ -44,5 +44,5 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.SupplyManagementWebApp20240509181547_555D }}
+        publish-profile: ${{ secrets.SupplyManagementWebApp20240510141750_5F8E }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
