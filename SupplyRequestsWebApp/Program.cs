@@ -14,7 +14,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        
+
         //Get Secrets from Azure Key Vault
         var keyVaultUrl = builder.Configuration.GetSection("AzureKeyVault")["KeyVaultUrl"] ?? throw new KeyNotFoundException("Configuration key 'KeyVaultUrl' wasn't found.");
         var credential = new ManagedIdentityCredential();
@@ -44,9 +44,9 @@ public class Program
                 builder =>
                 {
                     builder.WithOrigins("http://localhost:44306"
-                        ,"http://localhost:14384"
-                        ,"http://localhost:5290"
-                        ,"https://localhost:7014") // Replace "port" with the port number your application is running on
+                        , "http://localhost:14384"
+                        , "http://localhost:5290"
+                        , "https://localhost:7014") // Replace "port" with the port number your application is running on
                            .AllowAnyHeader()
                            .AllowAnyMethod();
                 });
@@ -100,7 +100,7 @@ public class Program
             );
 
             endpoints.MapHub<NotificationHub>("/notificationHub");
-		});
+        });
 
         // Create Roles
         using (var scope = app.Services.CreateScope())

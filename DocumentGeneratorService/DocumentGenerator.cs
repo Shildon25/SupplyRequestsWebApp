@@ -4,7 +4,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 namespace SupplyManagement.DocumentGeneratorService
 {
     public static class DocumentGenerator
-	{
+    {
         public static void GenerateSupplyDocument(SupplyDocument supplyDocument, string filePath, string templateFilePath)
         {
             // Load the template document

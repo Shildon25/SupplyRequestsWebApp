@@ -9,16 +9,16 @@ namespace SupplyManagement.Models.Enums
         Rejected,
         [Display(Name = "Details Document Generated")]
         DelailsDocumentGenerated,
-		[Display(Name = "Pending Delivery")]
-		PendingDelivery,
+        [Display(Name = "Pending Delivery")]
+        PendingDelivery,
         Delivered,
-		[Display(Name = "Delivered With Claims")]
-		DeliveredWithClaims,
-		[Display(Name = "Claims Document Generated")]
-		ClaimsDocumentGenerated,
-		[Display(Name = "Claims Eliminated")]
-		ClaimsEliminated,
-		[Display(Name = "Money Returned")]
-		MoneyRetured,
+        [Display(Name = "Delivered With Claims")]
+        DeliveredWithClaims,
+        [Display(Name = "Claims Document Generated")]
+        ClaimsDocumentGenerated,
+        [Display(Name = "Claims Eliminated")]
+        ClaimsEliminated,
+        [Display(Name = "Money Returned")]
+        MoneyRetured,
     }
 }

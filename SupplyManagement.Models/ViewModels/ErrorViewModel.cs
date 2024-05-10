@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using System.Diagnostics;
-
 namespace SupplyManagement.Models.ViewModels
 {
     public class ErrorViewModel
@@ -10,11 +7,11 @@ namespace SupplyManagement.Models.ViewModels
         }
 
         public ErrorViewModel(string errorMessage)
-		{
+        {
             ErrorMessage = errorMessage;
-		}
+        }
 
-		public ErrorViewModel(string requestId, string errorMessage)
+        public ErrorViewModel(string requestId, string errorMessage)
         {
             RequestId = requestId;
             ErrorMessage = errorMessage;

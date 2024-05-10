@@ -1,9 +1,9 @@
 ﻿namespace SupplyManagement.Models
 {
+    using SupplyManagement.Models.Enums;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Diagnostics.CodeAnalysis;
-    using SupplyManagement.Models.Enums;
 
     public class SupplyRequest
     {
@@ -29,7 +29,7 @@
         public string? DeliveredByUserId { get; set; }
         [ForeignKey("DeliveredByUserId")]
         public User? DeliveredBy { get; set; }
-		[Display(Name = "Claims Text")]
-		public string? ClaimsText { get; set; }
+        [Display(Name = "Claims Text")]
+        public string? ClaimsText { get; set; }
     }
 }

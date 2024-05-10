@@ -145,9 +145,9 @@ namespace SupplyManagement.DocumentGeneratorService
 
 
                         DocumentGenerator.GenerateSupplyDocument(document, filePath, SupplyDocumentTemplateFilePath);
-                        
+
                         await UploadFileToBlobStorage(containerClient, filePath);
-                        
+
                         await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.DelailsDocumentGenerated, containerClient);
                     }
                     catch (Exception ex)
@@ -166,9 +166,9 @@ namespace SupplyManagement.DocumentGeneratorService
                         string filePath = Path.Combine(filePathBase, $"ClaimsDocument_{document.RequestId}.docx");
 
                         DocumentGenerator.GenerateClaimsDocument(document, filePath, ClaimsDocumentTemplateFilePath);
-                        
+
                         await UploadFileToBlobStorage(containerClient, filePath);
-                        
+
                         await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.ClaimsDocumentGenerated, containerClient);
                     }
                     catch (Exception ex)

@@ -16,9 +16,9 @@
         {
         }
 
-        public DbSet<User> Users {  get; set; }
-        public DbSet<Vendor> Vendors {  get; set; }
-        public DbSet<Item> Items {  get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<Item> Items { get; set; }
         public DbSet<SupplyRequest> SupplyRequests { get; set; }
         public DbSet<ItemSupplyRequest> ItemSupplyRequests { get; set; }
 

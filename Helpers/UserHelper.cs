@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using System.Security.Claims;
 using SupplyManagement.Models;
+using System.Security.Claims;
 
 namespace SupplyManagement.Helpers
 {
