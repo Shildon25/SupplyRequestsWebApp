@@ -44,22 +44,23 @@ namespace SupplyManagement.WebApp.Areas.Manager.Controllers
                 // Retrieve users with Created account status
                 var users = await _context.Users
                     .Where(u => u.AccountStatus == AccountStatuses.Created)
-                    .Select(user => new ApproveAccountViewModel()
-                    {
-                        Id = user.Id,
-                        Name = user.Name,
-                        Surname = user.Surname,
-                        Email = user.Email ?? "",
-                        // Null check for UserManager
-                        Roles = String.Join(',', _userManager.GetRolesAsync(user).Result.ToArray() ?? new string[0]),
-                        AccountStatus = user.AccountStatus,
-                    })
                     .ToListAsync();
 
-                // Logging information
-                _logger.LogInformation("Successfully retrieved account approval requests.");
+                var approvalViewModel = users.Select(user => new ApproveAccountViewModel()
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Surname = user.Surname,
+                    Email = user.Email ?? "",
+                    // Null check for UserManager
+                    Roles = String.Join(',', _userManager.GetRolesAsync(user).Result.ToArray() ?? new string[0]),
+                    AccountStatus = user.AccountStatus,
+                });
 
-                return View(users);
+				// Logging information
+				_logger.LogInformation("Successfully retrieved account approval requests.");
+
+                return View(approvalViewModel);
             }
             catch (Exception ex)
             {
