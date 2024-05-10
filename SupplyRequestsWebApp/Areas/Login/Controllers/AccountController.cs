@@ -157,9 +157,12 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
                 {
                     // Find the user by email
                     var foundUser = await _userManager.FindByEmailAsync(user.Email) as User;
+                    var passwordCorrect = foundUser != null 
+                        ? (await _signInManager.CheckPasswordSignInAsync(foundUser, user.Password, false).ConfigureAwait(false)).Succeeded
+                        : false;
 
                     // If user is found and account is approved
-                    if (foundUser != null && foundUser.AccountStatus == AccountStatuses.Approved)
+                    if (foundUser != null && passwordCorrect && foundUser.AccountStatus == AccountStatuses.Approved)
                     {
                         // Attempt to sign in the user with the provided credentials
                         var result = await _signInManager.PasswordSignInAsync(foundUser, user.Password, true, false);
@@ -172,12 +175,12 @@ namespace SupplyManagement.WebApp.Areas.Login.Controllers
                             return RedirectToAction("Index", "Home");
                         }
                     }
-                    else if (foundUser != null && foundUser.AccountStatus == AccountStatuses.Rejected)
+                    else if (foundUser != null && passwordCorrect && foundUser.AccountStatus == AccountStatuses.Rejected)
                     {
                         // If account approval request was rejected, add error message and return login page
                         ModelState.AddModelError(string.Empty, "Account approval request was rejected by Manager");
                     }
-                    else if (foundUser != null && foundUser.AccountStatus == AccountStatuses.Created)
+                    else if (foundUser != null && passwordCorrect && foundUser.AccountStatus == AccountStatuses.Created)
                     {
                         // If account is not approved yet, add error message and return login page
                         ModelState.AddModelError(string.Empty, "Account not approved");
