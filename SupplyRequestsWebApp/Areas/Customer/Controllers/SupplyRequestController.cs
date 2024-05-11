@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SupplyManagement.Helpers;
 using SupplyManagement.Models;
 using SupplyManagement.Models.Enums;
@@ -1059,7 +1060,17 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                 }
                 else
                 {
-                    request.ClaimsText = model.ClaimsText;
+                    if (model.ClaimsText.IsNullOrEmpty())
+                    {
+						// Log an error if the status is not valid for delivery
+						_logger.LogError("Claims text cannot be empty.");
+						ModelState.AddModelError(string.Empty, "Claims text cannot be empty.");
+						return View(model);
+					}
+                    else
+                    {
+                        request.ClaimsText = model.ClaimsText;
+                    }
                 }
 
                 // Update the supply request in the database
