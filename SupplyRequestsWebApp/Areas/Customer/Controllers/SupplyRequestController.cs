@@ -520,8 +520,14 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                     throw new ArgumentException("Incorrect request id.");
                 }
 
-                // Check if the status of the model is not 'Approved' or 'Rejected'
-                if (model.Status != SupplyRequestStatuses.Approved && model.Status != SupplyRequestStatuses.Rejected)
+				// Prepare supply request statuses for dropdown
+				var requestStatuses = from SupplyRequestStatuses status in Enum.GetValues(typeof(SupplyRequestStatuses))
+									  where status == SupplyRequestStatuses.Approved || status == SupplyRequestStatuses.Rejected
+									  select new { Id = (int)status, Name = status.ToString() };
+				ViewData["requestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
+
+				// Check if the status of the model is not 'Approved' or 'Rejected'
+				if (model.Status != SupplyRequestStatuses.Approved && model.Status != SupplyRequestStatuses.Rejected)
                 {
                     // Log an error if the status is not 'Approved' or 'Rejected'
                     _logger.LogError("Invalid status {Status} provided for approval.", model.Status);
@@ -711,8 +717,15 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                     throw new ArgumentException("Incorrect request id.");
                 }
 
-                // Check if the model's status is a valid claims resolution status
-                if (model.Status != SupplyRequestStatuses.MoneyRetured
+				// Define select list items for request statuses related to claims resolution
+				var requestStatuses = from SupplyRequestStatuses status in Enum.GetValues(typeof(SupplyRequestStatuses))
+									  where status == SupplyRequestStatuses.MoneyRetured
+									   || status == SupplyRequestStatuses.ClaimsEliminated
+									  select new { Id = (int)status, Name = status.ToString() };
+				ViewData["claimsRequestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
+
+				// Check if the model's status is a valid claims resolution status
+				if (model.Status != SupplyRequestStatuses.MoneyRetured
                     && model.Status != SupplyRequestStatuses.ClaimsEliminated)
                 {
                     // Log an error if the status is not valid
@@ -890,8 +903,17 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                     throw new ArgumentException("Incorrect request id.");
                 }
 
-                // Check if the model status is valid for delivery
-                if (model.Status != SupplyRequestStatuses.PendingDelivery)
+
+				// Select the delivery request statuses
+				var requestStatuses = from SupplyRequestStatuses status in Enum.GetValues(typeof(SupplyRequestStatuses))
+									  where status == SupplyRequestStatuses.PendingDelivery
+									  select new { Id = (int)status, Name = status.ToString() };
+
+				// Add the delivery request statuses to ViewData
+				ViewData["deliveryRequestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
+
+				// Check if the model status is valid for delivery
+				if (model.Status != SupplyRequestStatuses.PendingDelivery)
                 {
                     // Log an error if the model status is invalid
                     _logger.LogError("Invalid status for delivery: {Status}", model.Status);
@@ -1031,8 +1053,17 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
                     throw new ArgumentException("Incorrect request id.");
                 }
 
-                // Check if the status in the model is valid for delivery
-                if (model.Status != SupplyRequestStatuses.Delivered
+				// Define delivery request statuses
+				var requestStatuses = from SupplyRequestStatuses status in Enum.GetValues(typeof(SupplyRequestStatuses))
+									  where status == SupplyRequestStatuses.Delivered
+									  || status == SupplyRequestStatuses.DeliveredWithClaims
+									  select new { Id = (int)status, Name = status.ToString() };
+
+				// Set the delivery request statuses in ViewData
+				ViewData["deliveredRequestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
+
+				// Check if the status in the model is valid for delivery
+				if (model.Status != SupplyRequestStatuses.Delivered
                     && model.Status != SupplyRequestStatuses.DeliveredWithClaims)
                 {
                     // Log an error if the status is not valid for delivery
