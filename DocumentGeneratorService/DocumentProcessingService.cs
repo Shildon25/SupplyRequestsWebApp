@@ -45,16 +45,11 @@ namespace SupplyManagement.DocumentGeneratorService
 
                 // Log information
                 _logger.LogInformation("Document processing completed.");
-
-                return Task.CompletedTask;
             }
             catch (Exception ex)
             {
                 // Log error
                 _logger.LogError(ex, "An error occurred while processing documents.");
-
-                // Handle the exception as needed
-                // For example, you can rethrow the exception, log it and continue, or perform other actions.
             }
         }
 
