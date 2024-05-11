@@ -9,8 +9,8 @@ namespace SupplyManagement.DocumentGeneratorService
 {
     public class DocumentProcessingService : BackgroundService
     {
-        private const string SupplyDocumentTemplateFilePath = "Templates//Supply Document.docx";
-        private const string ClaimsDocumentTemplateFilePath = "Templates//Claims Document.docx";
+        private const string SupplyDocumentTemplateFileName = "Supply Document.docx";
+        private const string ClaimsDocumentTemplateFileName = "Claims Document.docx";
 
         private readonly string _filePathBase;
         private readonly string _connectionString;
@@ -135,14 +135,14 @@ namespace SupplyManagement.DocumentGeneratorService
                     try
                     {
                         // Generate supply document
-                        string filePath = Path.Combine(filePathBase, $"SupplyDocument_{document.RequestId}.docx");
+                        string blobName = $"SupplyDocument_{document.RequestId}.docx";
 
+                        var templateStream = await DownloadFileAsync(containerClient, SupplyDocumentTemplateFileName);
+						DocumentGenerator.GenerateSupplyDocument(document, templateStream);
 
-                        DocumentGenerator.GenerateSupplyDocument(document, filePath, SupplyDocumentTemplateFilePath);
+                        await UploadFileToBlobStorage(containerClient, blobName, templateStream);
 
-                        await UploadFileToBlobStorage(containerClient, filePath);
-
-                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.DelailsDocumentGenerated, containerClient);
+                        await CheckDocumentCreationAndChangeStatus(_connectionString, blobName, document.RequestId, SupplyRequestStatuses.DelailsDocumentGenerated, containerClient);
                     }
                     catch (Exception ex)
                     {
@@ -156,14 +156,15 @@ namespace SupplyManagement.DocumentGeneratorService
                 {
                     try
                     {
-                        // Generate claims document
-                        string filePath = Path.Combine(filePathBase, $"ClaimsDocument_{document.RequestId}.docx");
+                        // Generate claims bdocument
+                        string blobName = $"ClaimsDocument_{document.RequestId}.docx";
 
-                        DocumentGenerator.GenerateClaimsDocument(document, filePath, ClaimsDocumentTemplateFilePath);
+                        var templateStream = await DownloadFileAsync(containerClient, ClaimsDocumentTemplateFileName);
+                        DocumentGenerator.GenerateClaimsDocument(document, templateStream);
 
-                        await UploadFileToBlobStorage(containerClient, filePath);
+                        await UploadFileToBlobStorage(containerClient, blobName, templateStream);
 
-                        await CheckDocumentCreationAndChangeStatus(_connectionString, filePath, document.RequestId, SupplyRequestStatuses.ClaimsDocumentGenerated, containerClient);
+                        await CheckDocumentCreationAndChangeStatus(_connectionString, blobName, document.RequestId, SupplyRequestStatuses.ClaimsDocumentGenerated, containerClient);
                     }
                     catch (Exception ex)
                     {
@@ -181,12 +182,12 @@ namespace SupplyManagement.DocumentGeneratorService
             }
         }
 
-        private async Task CheckDocumentCreationAndChangeStatus(string connectionString, string filePath, int requestId, SupplyRequestStatuses status, BlobContainerClient containerClient)
+        private async Task CheckDocumentCreationAndChangeStatus(string connectionString, string blobName, int requestId, SupplyRequestStatuses status, BlobContainerClient containerClient)
         {
             try
             {
                 // Check if the blob exists in the container
-                if (await BlobExistsAsync(containerClient, Path.GetFileName(filePath)))
+                if (await BlobExistsAsync(containerClient, blobName))
                 {
                     // Update status in the database
                     await UpdateStatusInDatabase(connectionString, requestId, status);
@@ -237,15 +238,33 @@ namespace SupplyManagement.DocumentGeneratorService
             }
         }
 
-        private async Task UploadFileToBlobStorage(BlobContainerClient containerClient, string filePath)
-        {
-            BlobClient blobClient = containerClient.GetBlobClient(Path.GetFileName(filePath));
+		private async Task<MemoryStream> DownloadFileAsync(BlobContainerClient containerClient, string blobName)
+		{
+			// Get a reference to the blob
+			BlobClient blobClient = containerClient.GetBlobClient(blobName);
 
-            // Upload the file to blob storage
-            await blobClient.UploadAsync(filePath, true);
+			// Download the blob to a memory stream
+			MemoryStream memoryStream = new MemoryStream();
+			await blobClient.DownloadToAsync(memoryStream);
+			memoryStream.Position = 0; // Reset the position to the beginning of the stream
 
-            // Log information
-            _logger.LogInformation("File {fileName} uploaded to Azure Storage.", Path.GetFileName(filePath));
+			// Log information
+			_logger.LogInformation("File {fileName} downloaded from Azure Storage.", Path.GetFileName(blobName));
+
+            return memoryStream;
+		}
+
+		private async Task UploadFileToBlobStorage(BlobContainerClient containerClient, string blobName, MemoryStream generatredFileStream)
+		{
+			BlobClient blobClient = containerClient.GetBlobClient(blobName);
+
+			// Get a reference to the 
+			// Upload the modified template stream to Azure Blob Storage
+			generatredFileStream.Position = 0; // Reset the position to the beginning of the stream
+			await blobClient.UploadAsync(generatredFileStream, true);
+
+			// Log information
+			_logger.LogInformation("File {fileName} uploaded to Azure Storage.", Path.GetFileName(blobName));
         }
 
         private async Task<bool> BlobExistsAsync(BlobContainerClient containerClient, string blobName)

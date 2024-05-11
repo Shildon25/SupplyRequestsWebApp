@@ -5,57 +5,49 @@ namespace SupplyManagement.DocumentGeneratorService
 {
     public static class DocumentGenerator
     {
-        public static void GenerateSupplyDocument(SupplyDocument supplyDocument, string filePath, string templateFilePath)
+        public static void GenerateSupplyDocument(SupplyDocument supplyDocument, MemoryStream templateStream)
         {
             // Load the template document
-            using (WordprocessingDocument templateDoc = WordprocessingDocument.Open(templateFilePath, false))
+            using (WordprocessingDocument doc = WordprocessingDocument.Open(templateStream, true))
             {
-                // Create a new document based on the template
-                using (WordprocessingDocument doc = templateDoc.Clone(filePath, true))
-                {
-                    // Access the main part of the document
-                    MainDocumentPart mainPart = doc.MainDocumentPart ?? throw new NullReferenceException("Failed to access main part of the document");
+                // Access the main part of the document
+                MainDocumentPart mainPart = doc.MainDocumentPart ?? throw new NullReferenceException("Failed to access main part of the document");
 
-                    // Find and replace placeholders in the document with actual values
-                    ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", supplyDocument.RequestId.ToString());
-                    ReplacePlaceholderWithText(mainPart, "[REQUEST_OWNER]", supplyDocument.RequestOwnerName);
-                    ReplacePlaceholderWithText(mainPart, "[APPROVAL_MANAGER]", supplyDocument.ApprovalManagerName);
+                // Find and replace placeholders in the document with actual values
+                ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", supplyDocument.RequestId.ToString());
+                ReplacePlaceholderWithText(mainPart, "[REQUEST_OWNER]", supplyDocument.RequestOwnerName);
+                ReplacePlaceholderWithText(mainPart, "[APPROVAL_MANAGER]", supplyDocument.ApprovalManagerName);
 
-                    // Replace items list placeholder
-                    string itemsList = string.Join("\n", supplyDocument.RequestItems);
-                    ReplacePlaceholderWithText(mainPart, "[ITEMS_LIST]", itemsList);
+                // Replace items list placeholder
+                string itemsList = string.Join("\n", supplyDocument.RequestItems);
+                ReplacePlaceholderWithText(mainPart, "[ITEMS_LIST]", itemsList);
 
-                    // Save the modified document to the output file
-                    doc.Save();
-                }
+                // Save the modified document to the output file
+                doc.Save();
             }
         }
 
-        public static void GenerateClaimsDocument(ClaimsDocument claimsDocument, string filePath, string templateFilePath)
-        {
-            // Load the template document
-            using (WordprocessingDocument templateDoc = WordprocessingDocument.Open(templateFilePath, false))
+        public static void GenerateClaimsDocument(ClaimsDocument claimsDocument, MemoryStream templateStream)
+		{
+			// Load the template document
+			using (WordprocessingDocument doc = WordprocessingDocument.Open(templateStream, true))
             {
-                // Create a new document based on the template
-                using (WordprocessingDocument doc = templateDoc.Clone(filePath, true))
-                {
-                    // Access the main part of the document
-                    MainDocumentPart mainPart = doc.MainDocumentPart ?? throw new NullReferenceException("Failed to access main part of the document");
+				// Access the main part of the document
+				MainDocumentPart mainPart = doc.MainDocumentPart ?? throw new NullReferenceException("Failed to access main part of the document");
 
-                    // Find and replace placeholders in the document with actual values
-                    ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", claimsDocument.RequestId.ToString());
-                    ReplacePlaceholderWithText(mainPart, "[REQUEST_OWNER]", claimsDocument.RequestOwnerName);
-                    ReplacePlaceholderWithText(mainPart, "[APPROVAL_MANAGER]", claimsDocument.ApprovalManagerName);
-                    ReplacePlaceholderWithText(mainPart, "[REQUEST_COURIER]", claimsDocument.CourierName);
-                    ReplacePlaceholderWithText(mainPart, "[CLAIMS_TEXT]", claimsDocument.ClaimsText);
+                // Find and replace placeholders in the document with actual values
+                ReplacePlaceholderWithText(mainPart, "[REQUEST_ID]", claimsDocument.RequestId.ToString());
+                ReplacePlaceholderWithText(mainPart, "[REQUEST_OWNER]", claimsDocument.RequestOwnerName);
+                ReplacePlaceholderWithText(mainPart, "[APPROVAL_MANAGER]", claimsDocument.ApprovalManagerName);
+                ReplacePlaceholderWithText(mainPart, "[REQUEST_COURIER]", claimsDocument.CourierName);
+                ReplacePlaceholderWithText(mainPart, "[CLAIMS_TEXT]", claimsDocument.ClaimsText);
 
-                    // Replace items list placeholder
-                    string itemsList = string.Join("\n", claimsDocument.RequestItems);
-                    ReplacePlaceholderWithText(mainPart, "[ITEMS_LIST]", itemsList);
+                // Replace items list placeholder
+                string itemsList = string.Join("\n", claimsDocument.RequestItems);
+                ReplacePlaceholderWithText(mainPart, "[ITEMS_LIST]", itemsList);
 
-                    // Save the modified document to the output file
-                    doc.Save();
-                }
+                // Save the modified document to the output file
+                doc.Save();
             }
         }
 

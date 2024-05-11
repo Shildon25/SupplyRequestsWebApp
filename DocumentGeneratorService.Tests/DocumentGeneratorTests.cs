@@ -1,4 +1,6 @@
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System.Linq;
 
 namespace SupplyManagement.DocumentGeneratorService.Tests
 {
@@ -7,7 +9,6 @@ namespace SupplyManagement.DocumentGeneratorService.Tests
     {
         private const string SupplyDocumentTemplateFilePath = "Templates//Supply Document.docx";
         private const string ClaimsDocumentTemplateFilePath = "Templates//Claims Document.docx";
-        private const string OutputFilePath = "Output.docx";
 
         [TestMethod]
         public void GenerateSupplyDocument_ReplacesPlaceholders()
@@ -21,25 +22,31 @@ namespace SupplyManagement.DocumentGeneratorService.Tests
                 new List<string> { "Item 1", "Item 2" }
             );
 
-            // Act
-            DocumentGenerator.GenerateSupplyDocument(supplyDocument, OutputFilePath, SupplyDocumentTemplateFilePath);
+			// Convert the template document to a memory stream
+			MemoryStream templateStream = new MemoryStream();
+			using (FileStream fileStream = File.OpenRead(SupplyDocumentTemplateFilePath))
+			{
+				fileStream.CopyTo(templateStream);
+			}
+
+			// Act
+			DocumentGenerator.GenerateSupplyDocument(supplyDocument, templateStream);
+
+			// Reset the memory stream position to read from the beginning
+			templateStream.Position = 0;
 
             // Assert
-            using (var outputDoc = WordprocessingDocument.Open(OutputFilePath, true))
+            using (WordprocessingDocument outputDoc = WordprocessingDocument.Open(templateStream, false))
             {
-                var body = outputDoc.MainDocumentPart.Document.Body;
+				Body outputBody = outputDoc.MainDocumentPart.Document.Body;
 
-                Assert.IsNotNull(body);
-                Assert.IsTrue(body.InnerText.Contains(supplyDocument.RequestId.ToString()));
-                Assert.IsTrue(body.InnerText.Contains(supplyDocument.RequestOwnerName));
-                Assert.IsTrue(body.InnerText.Contains(supplyDocument.ApprovalManagerName));
-                Assert.IsTrue(body.InnerText.Contains(supplyDocument.RequestItems[0]));
-                Assert.IsTrue(body.InnerText.Contains(supplyDocument.RequestItems[1]));
+				Assert.IsTrue(outputBody.InnerText.Contains(supplyDocument.RequestId.ToString()));
+                Assert.IsTrue(outputBody.InnerText.Contains(supplyDocument.RequestOwnerName));
+                Assert.IsTrue(outputBody.InnerText.Contains(supplyDocument.ApprovalManagerName));
+                Assert.IsTrue(outputBody.InnerText.Contains(supplyDocument.RequestItems[0]));
+                Assert.IsTrue(outputBody.InnerText.Contains(supplyDocument.RequestItems[1]));
             }
-
-            // Clean up
-            File.Delete(OutputFilePath);
-        }
+		}
 
         [TestMethod]
         public void GenerateClaimsDocument_ReplacesPlaceholders()
@@ -55,26 +62,32 @@ namespace SupplyManagement.DocumentGeneratorService.Tests
                 new List<string> { "Item 1", "Item 2" }
             );
 
-            // Act
-            DocumentGenerator.GenerateClaimsDocument(claimsDocument, OutputFilePath, ClaimsDocumentTemplateFilePath);
+			// Convert the template document to a memory stream
+			MemoryStream templateStream = new MemoryStream();
+			using (FileStream fileStream = File.OpenRead(ClaimsDocumentTemplateFilePath))
+			{
+				fileStream.CopyTo(templateStream);
+			}
+
+			// Act
+			DocumentGenerator.GenerateClaimsDocument(claimsDocument, templateStream);
+
+			// Reset the memory stream position to read from the beginning
+			templateStream.Position = 0;
 
             // Assert
-            using (var outputDoc = WordprocessingDocument.Open(OutputFilePath, true))
+            using (WordprocessingDocument outputDoc = WordprocessingDocument.Open(templateStream, false))
             {
-                var body = outputDoc.MainDocumentPart.Document.Body;
+                Body outputBody = outputDoc.MainDocumentPart.Document.Body;
 
-                Assert.IsNotNull(body);
-                Assert.IsTrue(body.InnerText.Contains(claimsDocument.RequestId.ToString()));
-                Assert.IsTrue(body.InnerText.Contains(claimsDocument.RequestOwnerName));
-                Assert.IsTrue(body.InnerText.Contains(claimsDocument.ApprovalManagerName));
-                Assert.IsTrue(body.InnerText.Contains(claimsDocument.CourierName));
-                Assert.IsTrue(body.InnerText.Contains(claimsDocument.ClaimsText));
-                Assert.IsTrue(body.InnerText.Contains(claimsDocument.RequestItems[0]));
-                Assert.IsTrue(body.InnerText.Contains(claimsDocument.RequestItems[1]));
+                Assert.IsTrue(outputBody.InnerText.Contains(claimsDocument.RequestId.ToString()));
+                Assert.IsTrue(outputBody.InnerText.Contains(claimsDocument.RequestOwnerName));
+                Assert.IsTrue(outputBody.InnerText.Contains(claimsDocument.ApprovalManagerName));
+                Assert.IsTrue(outputBody.InnerText.Contains(claimsDocument.CourierName));
+                Assert.IsTrue(outputBody.InnerText.Contains(claimsDocument.ClaimsText));
+                Assert.IsTrue(outputBody.InnerText.Contains(claimsDocument.RequestItems[0]));
+                Assert.IsTrue(outputBody.InnerText.Contains(claimsDocument.RequestItems[1]));
             }
-
-            // Clean up
-            File.Delete(OutputFilePath);
         }
     }
 }
