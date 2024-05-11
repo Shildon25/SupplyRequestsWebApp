@@ -23,7 +23,6 @@ public class Program
         // Configure Serilog logging
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console() // Log to console
-            .WriteTo.File($"C:\\Users\\{Environment.UserName}\\Desktop\\log.txt", rollingInterval: RollingInterval.Day) // Log to file on desktop
             .CreateLogger();
 
         builder.Logging.ClearProviders();
