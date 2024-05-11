@@ -526,6 +526,18 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 									  select new { Id = (int)status, Name = status.ToString() };
 				ViewData["requestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
 
+				// Bind model with selected items and other details
+				var requestItems = await (from i in _context.Items
+										  join ir in _context.ItemSupplyRequests on i.Id equals ir.ItemId
+										  where ir.SupplyRequestId == id
+										  select new SelectListItem()
+										  {
+											  Text = String.Format("Item: {0}; Vendor {1}", i.Name, i.Vendor.Name),
+											  Value = i.Id.ToString()
+										  }).ToListAsync();
+
+				model.SelectedItems = requestItems;
+
 				// Check if the status of the model is not 'Approved' or 'Rejected'
 				if (model.Status != SupplyRequestStatuses.Approved && model.Status != SupplyRequestStatuses.Rejected)
                 {
@@ -724,6 +736,18 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 									  select new { Id = (int)status, Name = status.ToString() };
 				ViewData["claimsRequestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
 
+				// Bind model with selected items and other details
+				var requestItems = await (from i in _context.Items
+										  join ir in _context.ItemSupplyRequests on i.Id equals ir.ItemId
+										  where ir.SupplyRequestId == id
+										  select new SelectListItem()
+										  {
+											  Text = String.Format("Item: {0}; Vendor {1}", i.Name, i.Vendor.Name),
+											  Value = i.Id.ToString()
+										  }).ToListAsync();
+
+				model.SelectedItems = requestItems;
+
 				// Check if the model's status is a valid claims resolution status
 				if (model.Status != SupplyRequestStatuses.MoneyRetured
                     && model.Status != SupplyRequestStatuses.ClaimsEliminated)
@@ -912,6 +936,18 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 				// Add the delivery request statuses to ViewData
 				ViewData["deliveryRequestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
 
+				// Bind model with selected items and other details
+				var requestItems = await (from i in _context.Items
+										  join ir in _context.ItemSupplyRequests on i.Id equals ir.ItemId
+										  where ir.SupplyRequestId == id
+										  select new SelectListItem()
+										  {
+											  Text = String.Format("Item: {0}; Vendor {1}", i.Name, i.Vendor.Name),
+											  Value = i.Id.ToString()
+										  }).ToListAsync();
+
+				model.SelectedItems = requestItems;
+
 				// Check if the model status is valid for delivery
 				if (model.Status != SupplyRequestStatuses.PendingDelivery)
                 {
@@ -1058,6 +1094,18 @@ namespace SupplyManagement.WebApp.Areas.Customer.Controllers
 									  where status == SupplyRequestStatuses.Delivered
 									  || status == SupplyRequestStatuses.DeliveredWithClaims
 									  select new { Id = (int)status, Name = status.ToString() };
+
+				// Bind model with selected items and other details
+				var requestItems = await (from i in _context.Items
+										  join ir in _context.ItemSupplyRequests on i.Id equals ir.ItemId
+										  where ir.SupplyRequestId == id
+										  select new SelectListItem()
+										  {
+											  Text = String.Format("Item: {0}; Vendor {1}", i.Name, i.Vendor.Name),
+											  Value = i.Id.ToString()
+										  }).ToListAsync();
+
+				model.SelectedItems = requestItems;
 
 				// Set the delivery request statuses in ViewData
 				ViewData["deliveredRequestStatuses"] = new SelectList(requestStatuses, "Id", "Name");
