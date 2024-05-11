@@ -12,15 +12,13 @@ namespace SupplyManagement.DocumentGeneratorService
         private const string SupplyDocumentTemplateFileName = "Supply Document.docx";
         private const string ClaimsDocumentTemplateFileName = "Claims Document.docx";
 
-        private readonly string _filePathBase;
         private readonly string _connectionString;
         private readonly string _storageConnectionString;
         private readonly string _containerName;
         private readonly ILogger<DocumentProcessingService> _logger;
 
-        public DocumentProcessingService(string filePathBase, string connectionString, string storageConnectionString, string containerName, ILogger<DocumentProcessingService> logger)
+        public DocumentProcessingService(string connectionString, string storageConnectionString, string containerName, ILogger<DocumentProcessingService> logger)
         {
-            _filePathBase = filePathBase;
             _connectionString = connectionString;
             _storageConnectionString = storageConnectionString;
             _containerName = containerName;
@@ -43,10 +41,12 @@ namespace SupplyManagement.DocumentGeneratorService
                 await GetRequestsFromDatabase(_connectionString, supplyRequestDocuments, claimsDocuments);
 
                 // Process requests in parallel
-                await ProcessRequests(supplyRequestDocuments, claimsDocuments, _filePathBase, containerClient);
+                await ProcessRequests(supplyRequestDocuments, claimsDocuments, containerClient);
 
                 // Log information
                 _logger.LogInformation("Document processing completed.");
+
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {
@@ -123,7 +123,7 @@ namespace SupplyManagement.DocumentGeneratorService
             return (supplyRequestDocuments, claimsDocuments);
         }
 
-        private async Task ProcessRequests(List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments, string filePathBase, BlobContainerClient containerClient)
+        private async Task ProcessRequests(List<SupplyDocument> supplyRequestDocuments, List<ClaimsDocument> claimsDocuments, BlobContainerClient containerClient)
         {
             try
             {
