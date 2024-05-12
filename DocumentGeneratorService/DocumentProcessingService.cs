@@ -50,6 +50,8 @@ namespace SupplyManagement.DocumentGeneratorService
             {
                 // Log error
                 _logger.LogError(ex, "An error occurred while processing documents.");
+
+                throw;
             }
         }
 
