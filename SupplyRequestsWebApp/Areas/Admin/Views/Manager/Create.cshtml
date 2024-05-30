@@ -7,7 +7,7 @@
 <form asp-action="Create" method="post" enctype="multipart/form-data">
     @Html.AntiForgeryToken()
     <div class="p-4 rounded border p">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div asp-validation-summary="All" class="text-danger"></div>
         <div class="form-group row my-3">
             <label asp-for="Email"></label>
             <input asp-for="Email" class="form-control" />
